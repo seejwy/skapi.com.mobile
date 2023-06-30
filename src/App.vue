@@ -1,5 +1,12 @@
 <template lang="pug">
 router-view
+Transition(name="toast")
+  .toast(v-if="state.user && !state.user.email_verified && state.showVerificationNotification")
+      Icon warning_bell
+      .title Email Verfication is Needed
+      div
+      .body Please verify your email to prevent your services from shutting down.
+      Icon.close(@click="state.setVerificationDelay") X2
 </template>
 
 <style lang="less" scoped>
@@ -13,6 +20,8 @@ router-view
 import { provide, ref } from 'vue';
 import { state } from '@/main';
 import { useRoute } from 'vue-router';
+
+import Icon from '@/components/Icon.vue';
 
 let pageTitle = ref('skapi');
 const route = useRoute();

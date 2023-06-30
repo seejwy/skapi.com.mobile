@@ -24,17 +24,15 @@ let skapi = new Admin();
 let awaitConnection = skapi.getConnection().then(c => {
     state.connection = c;
     state.user = skapi.user;
-    if(state.user) {
+});
+
+watch(() => state.user, user => {
+    if (user) {
         const ONE_DAY = 86400;
         if (!state.user?.email_verified && (Number(localStorage.getItem(`verification_message_${state.user.user_id}`)) + ONE_DAY) < new Date().getTime()) {
             state.showVerificationNotification = true;
             localStorage.removeItem(`verification_message_${state.user.user_id}`);
         }
-    }
-});
-
-watch(() => state.user, user => {
-    if (user) {
         state.getServices = new Promise(async res => {
             if (!state.services) {
                 state.services = (await skapi.getServices());
