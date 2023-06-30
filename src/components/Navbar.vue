@@ -1,10 +1,10 @@
 <template lang="pug">
-sui-nav#top-nav(auto-hide)
+sui-nav#topNav(auto-hide)
     .navAlign
         #leftButton
-            Icon.clickable.backButton(v-if='!props.isParentLevel' @click="toParent") left
+            Icon.clickable.backButton(v-if='!props.isParentLevel && state.user' @click="toParent") left
         .title#title(ref="title")
-            img.logo(v-if="props.isParentLevel" alt="skapi" src="@/assets/img/logo-small.svg" @click="()=>props.isParentLevel ? router.push('/') : null")
+            img.logo(v-if="props.isParentLevel || !state.user" alt="skapi" src="@/assets/img/logo-small.svg" @click="()=>props.isParentLevel ? router.push('/') : null")
         .menu#rightButton(ref="rightButton")
             Icon.clickable(style="height: 28px; width: 28px;" @click='open') menu_horizontal
 
@@ -107,7 +107,7 @@ function open() {
     }
 }
 
-sui-nav#top-nav {
+sui-nav#topNav {
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.2);
     padding: 0 var(--side-padding, 24px);
     color: #fff;

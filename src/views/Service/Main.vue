@@ -22,10 +22,7 @@
             NotExists(v-if='service === 404')
             template(v-else-if='service')
                 router-view
-
-            sui-overlay(v-else-if="state.viewport !== 'mobile'" ref="overlay" style="background: rgba(0, 0, 0, 0.6);")
-                Login
-            Login(v-else-if="!state.user")
+            Login(v-if="!state.user")
     .sidebarHolder
         .sidebar(v-if="state.user")
             router-link(:to="{name: 'service'}" :class="{'router-link-active-mobile': !route.path.split('/')[3]}")

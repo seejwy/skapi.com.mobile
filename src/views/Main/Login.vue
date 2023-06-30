@@ -49,16 +49,6 @@ const promiseRunning = ref(false);
 onMounted(() => {
     if (document.body.classList.contains('admin')) {
         document.body.classList.remove('admin');
-        document.body.classList.add('admin-login');
-    }
-});
-
-onBeforeUnmount(() => {
-    if (document.body.classList.contains('admin-login')) {
-        document.body.classList.remove('admin-login');
-        if (route.path.includes('/admin')) {
-            document.body.classList.add('admin');
-        }
     }
 });
 
