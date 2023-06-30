@@ -4,7 +4,7 @@ template(v-if="user")
         template(v-slot:leftButton)        
             Icon.clickable.backButton(@click="backHandler") left
         template(v-slot:title)
-            div {{  user.user_id }}
+            div(style="overflow: hidden; text-overflow: ellipsis;") {{  user.user_id }}
         template(v-slot:rightButton)
             div
     .head

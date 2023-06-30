@@ -3,7 +3,7 @@ NavBarProxy(v-if="route.query.table")
     template(v-slot:leftButton)
         Icon.clickable.backButton(@click="router.push({name: 'records'})") left
     template(v-slot:title)
-        div {{ route.query.table }}
+        div(style="overflow: hidden; text-overflow: ellipsis;") {{ route.query.table }}
     template(v-slot:rightButton)
         div
 .recordContainer#data-container
