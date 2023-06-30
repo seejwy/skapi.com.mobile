@@ -242,7 +242,6 @@ const selectedUsers = computed(() => {
 
 const userSelectionHandler = (e) => {
     let user = serviceUsers.value.list.find((user) => {
-        console.log(user.user_id === e.target.value)
         return user.user_id === e.target.value;
     });
     if (e.target.checked) {
@@ -271,12 +270,9 @@ let searchResult = inject('searchResult');
 let getMoreUsersQueue = null;
 
 async function getMoreUsers() {
-    console.log("Called", fetchingData.value, serviceUsers.value?.endOfList)
     if (fetchingData.value || serviceUsers.value?.endOfList) {
         return;
     }
-
-    console.log('running')
 
     fetchingData.value = true;
 
