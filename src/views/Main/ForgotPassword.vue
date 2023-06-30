@@ -31,6 +31,7 @@
                         @input="(e) => { code = e.target.value; resetError = null; }"
                         placeholder="Enter verification code"
                         autocomplete="one-time-code"
+                        inputmode="numeric"
                         required)
                 .input
                     span Haven't got any code?
