@@ -564,50 +564,40 @@ onBeforeRouteLeave((to, from) => {
 .tableOuterWrapper {
     position: relative;
     margin: auto -20px;
-    background-color: #434343;
-
 
     @media @phone {
         margin: auto -16px;
     }
 
-    .mobile-search-nav+& {
-        background-color: transparent;
-        margin: 0;
+    .tableActions {
 
-        .tableActions {
-            padding: 14px 20px 14px 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 0;
-
-            .actions {
-                margin: -14px 0;
-            }
+        .actions {
+            margin: -14px 0;
         }
+    }
 
-        table {
+    table {
 
-            tbody tr,
-            thead tr {
-                background-color: transparent;
-
-                th {
-                    background-color: transparent;
-                }
-            }
-
-            tbody {
-                tr {
-                    &:nth-child(odd) {
-                        background: rgba(255, 255, 255, .04);
-                    }
-                }
-            }
-        }
-
-        .noUsersFound {
+        tbody tr,
+        thead tr {
             background-color: transparent;
+
+            th {
+                background-color: transparent;
+            }
         }
+
+        tbody {
+            tr {
+                &:nth-child(odd) {
+                    background: rgba(255, 255, 255, .04);
+                }
+            }
+        }
+    }
+
+    .noUsersFound {
+        background-color: transparent;
     }
 
     .search-query {
@@ -631,7 +621,7 @@ onBeforeRouteLeave((to, from) => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #434343;
+        background: rgba(255, 255, 255, 0.04);
         padding: 14px 16px 14px 20px;
         border-radius: 8px 8px 0 0;
         color: rgba(255, 255, 255, 0.6);
