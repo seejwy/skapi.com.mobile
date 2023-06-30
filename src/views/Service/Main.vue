@@ -1,7 +1,7 @@
 <template lang="pug">
 .servicePageShell
     .sideScreen
-        NavBar(v-if="route.name !== 'mobileSearchRecord' && route.name !== 'recordSearch' && route.name !== 'mobileSearchUser' && !(route.name === 'users' && route.query.search)" style="background-color: #505050")
+        NavBar(v-if="route.name !== 'mobileSearchRecord' && route.name !== 'recordSearch' && route.name !== 'userSearch' && route.name !== 'mobileSearchUser' && !(route.name === 'users' && route.query.search)" style="background-color: #505050")
             ul.inlineVerticalMiddle
                 li
                     router-link(to="/" tag="li")

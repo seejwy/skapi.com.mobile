@@ -1,27 +1,17 @@
-<template lang="pug">    
-NavBarProxy
-    template(v-slot:title)
-        div Users
-.pageHeader.headSpaceHelper
-    p.
-        Users are individuals who have successfully created an account and logged in at least once. 
-        You can perform searches and apply access control on this page.
-        Find out how you can easily perform authentication and manage your users.
-
-    .action
-        a(href="https://docs.skapi.com/authentication" target="_blank")
-            sui-button.lineButton(type="button") Find out More
-    div(style="clear:both;")
+<template lang="pug">
+SearchNavBar
+    div {{ pageTitle }}
+    template(v-slot:right) 
+        Icon.placeholderIcon(@click="cancelSearch") X2
 .tableOuterWrapper(:loading="promiseRunning || null")
     .tableActions(:class="{'rounded-border' : !serviceUsers?.list?.length && fetchingData}")
-        .headerActions(v-if="serviceUsers?.list.length")
+        .headerActions
             div.dropdown
                 span Headers
                 Icon down2
             sui-select(:value="mobileVisibleField" @change="(e) => mobileVisibleField = e.target.value")
                 template(v-for="(field, key) in visibleFields")
                     option(v-if="key !== 'approved'" :value="key") {{  field.text  }}
-        .headerActions(v-else)
         .actions
             sui-button.icon-button(type="button" @click="blockUsers" :disabled="(selectedUnblockedUsers.length === 0 || selectedBlockedUsers.length > 0) || null")
                 Icon block
@@ -31,7 +21,6 @@ NavBarProxy
                 Icon trash
 
     .tableWrapper
-
         table(v-if="!serviceUsers?.list?.length && fetchingData")
             tbody
                 tr(v-for="x in numberOfSkeletons()").animation-skeleton
@@ -71,20 +60,8 @@ NavBarProxy
                         td
                         td
     .noUsersFound(v-if="!serviceUsers?.list?.length && !fetchingData")
-        template(v-if="!serviceUsers?.list?.length")     
-            .title No Users
-            p You have no existing users yet
-        template(v-else) 
-            .title No Users Found
-            p There were no users matching the query.
-.pageAction(@blur="isFabOpen = false")
-    sui-button.fab.openMenu(type="button" @click.stop="isFabOpen = !isFabOpen")
-        Icon menu_vertical
-
-    Transition
-        div(v-if="isFabOpen" @click.stop)
-            sui-button.fab(type="button" @click="router.push({name: 'mobileSearchUser'})")
-                Icon search
+        .title No Users Found
+        p There were no users matching the query.
 sui-overlay(ref="confirmOverlay")
     .popup
         .title
@@ -111,12 +88,14 @@ import SearchNavBar from '@/components/SearchNavBar.vue';
 let route = useRoute();
 let router = useRouter();
 let serviceId = route.params.service;
-const searchField = ref(null);
+
 const service = inject('service');
+let serviceUsers = ref(null)
 
 let fetchLimit = 50;
 
 const appStyle = inject('appStyle');
+const pageTitle = ref('');
 
 const visibleFields = reactive({
     approved: {
@@ -169,10 +148,52 @@ const visibleFields = reactive({
     }
 });
 
+const searchParams = reactive({
+    service: serviceId,
+    searchFor: 'timestamp',
+    condition: '>=',
+    value: ''
+});
 const promiseRunning = ref(false);
 const confirmOverlay = ref(null);
 const actionType = ref('');
 
+const cancelSearch = () => {
+    serviceUsers.value = null;
+    router.push({ name: 'mobileSearchUser' });
+}
+
+const getCleanSearchParams = () => {
+    let params = {
+        ...searchParams
+    }
+
+    if (params.searchFor === 'timestamp') {
+        if (params.value === '') params.value = 0;
+        else {
+            params.value = new Date(params.value).getTime();
+        }
+    }
+
+    return params;
+}
+const callSearch = () => {
+    fetchingData.value = true;
+    serviceUsers.value = null;
+
+    let params = getCleanSearchParams();
+
+    skapi.getUsers(params, {
+        fetchMore: false,
+        limit: fetchLimit
+    }).then((res) => {
+        fetchingData.value = false;
+        serviceUsers.value = {
+            endOfList: res.endOfList,
+            list: res.list
+        };
+    });
+}
 const mobileVisibleField = ref('user_id');
 const selectedBlockedUsers = ref([]);
 const selectedUnblockedUsers = ref([]);
@@ -205,9 +226,6 @@ let fetchingData = inject('fetchingData');
 let isFabOpen = ref(false);
 
 // data
-let serviceUsers = inject('serviceUsers');
-let searchResult = inject('searchResult');
-
 let getMoreUsersQueue = null;
 
 async function getMoreUsers() {
@@ -221,13 +239,13 @@ async function getMoreUsers() {
         return;
     }
 
+    let params = getCleanSearchParams();
+
     getMoreUsersQueue = skapi.getUsers(
+        params,
         {
-            service: serviceId,
-            searchFor: 'timestamp',
-            condition: '>=',
-            value: 0
-        }, { fetchMore: true, limit: fetchLimit }).catch(err => {
+            fetchMore: true, limit: fetchLimit
+        }).catch(err => {
             fetchingData.value = false;
             throw err;
         });
@@ -265,7 +283,7 @@ function getUsers(refresh = false) {
         value: 0
     };
 
-    skapi.getUsers(params, { limit: fetchLimit })
+    skapi.getUsers(searchParams, { limit: fetchLimit })
         .then(t => {
             serviceUsers.value = {
                 endOfList: t.endOfList,
@@ -282,10 +300,10 @@ function getUsers(refresh = false) {
     return;
 }
 
-const toggleMobileDesktopSearchView = () => {
-    appStyle.mainPadding = null;
-    appStyle.background = '#434343';
-}
+// get users on created
+searchParams.searchFor = route.query.search;
+searchParams.condition = route.query.condition;
+searchParams.value = route.query.value;
 
 function numberOfSkeletons() {
     // calculated by available vertical space
@@ -404,13 +422,18 @@ const deleteUsers = async () => {
 }
 
 onMounted(() => {
-    if (!serviceUsers.value?.list) {
-        getUsers(true);
-    }
-
+    callSearch();
     window.addEventListener('scroll', mobileScrollHandler, { passive: true });
-    toggleMobileDesktopSearchView();
+    pageTitle.value = `${visibleFields[route.query.search].text} : ${route.query.value}`;
+    appStyle.mainPadding = '0';
+    appStyle.background = '#333333';
 });
+
+watch(() => route.query, () => {
+    searchParams.searchFor = route.query.search;
+    searchParams.condition = route.query.condition;
+    searchParams.value = route.query.value;
+})
 
 document.body.classList.add('table');
 onBeforeUnmount(() => {
@@ -436,6 +459,75 @@ onBeforeRouteLeave((to, from) => {
 
     @media @phone {
         margin: auto -16px;
+    }
+
+    
+    .mobileSearchNav+& {
+        background-color: transparent;
+        margin: 0;
+
+        .tableActions {
+            padding: 14px 20px 14px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 0;
+
+            .actions {
+                margin: -14px 0;
+            }
+        }
+
+        table {
+
+            tbody tr,
+            thead tr {
+                background-color: transparent;
+
+                th {
+                    background-color: transparent;
+                }
+            }
+
+            tbody {
+                tr {
+                    &:nth-child(odd) {
+                        background: rgba(255, 255, 255, .04);
+                    }
+                }
+            }
+        }
+
+        .noUsersFound {
+            background-color: transparent;
+        }
+    }
+
+    .mobileSearchNav+& {
+        background-color: transparent;
+        margin: 0;
+
+        table {
+
+            tbody tr,
+            thead tr {
+                background-color: transparent;
+
+                th {
+                    background-color: transparent;
+                }
+            }
+
+            tbody {
+                tr {
+                    &:nth-child(odd) {
+                        background: rgba(255, 255, 255, .04);
+                    }
+                }
+            }
+        }
+
+        .noUsersFound {
+            background-color: transparent;
+        }
     }
 
     .search-query {
@@ -652,38 +744,6 @@ onBeforeRouteLeave((to, from) => {
             cursor: pointer;
             color: #fff;
         }
-    }
-}
-
-.pageAction {
-    position: fixed;
-    bottom: 76px;
-    right: 16px;
-    overflow: hidden;
-
-    &>sui-button {
-        z-index: 2;
-    }
-
-    &,
-    &>div {
-        display: flex;
-        flex-direction: column-reverse;
-        align-items: center;
-        gap: 12px;
-        width: 48px;
-    }
-
-    .v-enter-active,
-    .v-leave-active {
-        transition: opacity .1s ease, transform .1s ease;
-        opacity: 1;
-    }
-
-    .v-enter-from,
-    .v-leave-to {
-        opacity: 0;
-        transform: translateY(100px);
     }
 }
 

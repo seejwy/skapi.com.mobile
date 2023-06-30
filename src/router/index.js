@@ -128,6 +128,11 @@ const router = createRouter({
                   name: 'userView',
                   component: ()=>import('@/views/Service/Users/MobileView.vue')
                 },
+                {
+                  path: 'search',
+                  name: 'userSearch',
+                  component: ()=>import('@/views/Service/Users/SearchResult.vue')
+                },
               ]
             },
           ]
