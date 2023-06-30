@@ -35,7 +35,7 @@ NavBarProxy(v-else)
                 Icon trash
 
     .tableWrapper
-        
+
         table(v-if="!serviceUsers?.list?.length && fetchingData")
             tbody
                 tr(v-for="x in numberOfSkeletons()").animation-skeleton
@@ -189,9 +189,9 @@ const confirmOverlay = ref(null);
 const actionType = ref('');
 
 const cancelSearch = () => {
-    searchResult.value = null; 
-    serviceUsers.value = null;  
-    router.push({ name: 'mobileSearchUser' }); 
+    searchResult.value = null;
+    serviceUsers.value = null;
+    router.push({ name: 'mobileSearchUser' });
 }
 
 const changeSearchType = (value) => {
@@ -564,40 +564,50 @@ onBeforeRouteLeave((to, from) => {
 .tableOuterWrapper {
     position: relative;
     margin: auto -20px;
+    background-color: #434343;
+
 
     @media @phone {
         margin: auto -16px;
     }
 
-    .tableActions {
+    .mobileSearchNav+& {
+        background-color: transparent;
+        margin: 0;
 
-        .actions {
-            margin: -14px 0;
-        }
-    }
+        .tableActions {
+            padding: 14px 20px 14px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 0;
 
-    table {
-
-        tbody tr,
-        thead tr {
-            background-color: transparent;
-
-            th {
-                background-color: transparent;
+            .actions {
+                margin: -14px 0;
             }
         }
 
-        tbody {
-            tr {
-                &:nth-child(odd) {
-                    background: rgba(255, 255, 255, .04);
+        table {
+
+            tbody tr,
+            thead tr {
+                background-color: transparent;
+
+                th {
+                    background-color: transparent;
+                }
+            }
+
+            tbody {
+                tr {
+                    &:nth-child(odd) {
+                        background: rgba(255, 255, 255, .04);
+                    }
                 }
             }
         }
-    }
 
-    .noUsersFound {
-        background-color: transparent;
+        .noUsersFound {
+            background-color: transparent;
+        }
     }
 
     .search-query {
@@ -621,7 +631,7 @@ onBeforeRouteLeave((to, from) => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: rgba(255, 255, 255, 0.04);
+        background: #434343;
         padding: 14px 16px 14px 20px;
         border-radius: 8px 8px 0 0;
         color: rgba(255, 255, 255, 0.6);
@@ -906,4 +916,5 @@ onBeforeRouteLeave((to, from) => {
 
 input {
     -webkit-appearance: none;
-}</style>
+}
+</style>

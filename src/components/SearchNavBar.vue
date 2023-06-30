@@ -1,5 +1,5 @@
 <template lang="pug">
-.mobile-search-nav
+.mobileSearchNav
     slot(name="left")
     div(style="width: 100%;")
         slot
@@ -19,7 +19,7 @@ onUnmounted(() => {
 <style lang="less">
 @import '@/assets/variables.less';
 
-.mobile-search-nav {
+.mobileSearchNav {
     position: sticky;
     top: 0;
     height: 60px;
