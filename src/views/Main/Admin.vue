@@ -23,8 +23,8 @@ div(v-else-if="state?.user")
                         span {{ service.name }}
                     Icon right
     .container.empty(v-else-if="state.blockingPromise")
-        Icon.animation-rotation(style="position: absolute; right: 24px; top: 24px; fill: var(--primary-color)") refresh
-    .container.empty.no-service(v-else)
+        Icon.animationRotation(style="position: absolute; right: 24px; top: 24px; fill: var(--primary-color)") refresh
+    .container.empty.noService(v-else)
         div(style="position: absolute; width: 100%;")
             .title No Services
             span Get started by creating a new service.
@@ -148,8 +148,16 @@ watch(() => state.getServices, getServices);
         }
 
         &,
-        &.no-service {
+        &.noService {
             height: 123.33px;
+
+            .title {            
+                font-size: 20px;
+            }
+
+            span {            
+                opacity: .25;
+            }
         }
     }
 

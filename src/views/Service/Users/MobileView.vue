@@ -18,7 +18,7 @@ template(v-if="user")
                     span {{ key.filter ? key.filter(user[key.key]) : user[key.key] || '-'}}
 
 div(v-else style="text-align: center; padding: 1em;")
-    Icon.animation-rotation(style="display:inline-block;width:32px;height:32px;") refresh
+    Icon.animationRotation(style="display:inline-block;width:32px;height:32px;") refresh
 </template>
 <script setup>
 import { inject, ref, reactive, watch, onBeforeUnmount } from 'vue';

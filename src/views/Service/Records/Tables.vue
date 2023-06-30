@@ -45,7 +45,7 @@ NavBarProxy
                                 template(v-if='t.records')
                                     Icon.clickable(style="color: rgba(255, 255, 255, .6)") right
 
-                                Icon.animation-rotation(v-else) refresh
+                                Icon.animationRotation(v-else) refresh
                 .tableHead.animation-skeleton.showOnTablet(v-if='fetchingData' v-for="t in numberOfSkeletons()")
                     span &nbsp;
 

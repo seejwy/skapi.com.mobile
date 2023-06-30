@@ -5,7 +5,7 @@ template(v-if="record")
     .title Record Not Found
     p Record does not exist
 div(v-else style="text-align: center; padding: 1em;")
-    Icon.animation-rotation(style="display:inline-block;width:32px;height:32px;") refresh
+    Icon.animationRotation(style="display:inline-block;width:32px;height:32px;") refresh
 </template>
 <script setup>
 import { inject, onBeforeUnmount, ref, onMounted } from 'vue';
