@@ -60,13 +60,6 @@ div(v-else-if="state?.user" :loading="isSaving || null")
         hr
         div(@click="openDeletePopup") Delete Your Account
             Icon(style="height: 20px; width: 20px; margin-left: 8px;") trash
-    Transition(name="toast")
-        .toast(v-if="state.user && !state.user.email_verified && state.showVerificationNotification")
-            Icon warning_bell
-            .title Email Verfication is Needed
-            div
-            .body Please verify your email to prevent your services from shutting down.
-            Icon.close(@click="state.setVerificationDelay") X2
 </template>
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';

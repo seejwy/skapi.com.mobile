@@ -23,18 +23,11 @@ div(v-else-if="state?.user")
                         span {{ service.name }}
                     Icon right
     .container.empty(v-else-if="state.blockingPromise")
-        Icon.animation-rotation(style="position: absolute; right: 24px; top: 24px; fill: var(--primary-color)") refresh
-    .container.empty.no-service(v-else)
+        Icon.animationRotation(style="position: absolute; right: 24px; top: 24px; fill: var(--primary-color)") refresh
+    .container.empty.noService(v-else)
         div(style="position: absolute; width: 100%;")
             .title No Services
             span Get started by creating a new service.
-    Transition(name="toast")
-        .toast(v-if="state.user && !state.user.email_verified && state.showVerificationNotification")
-            Icon warning_bell
-            .title Email Verfication is Needed
-            div
-            .body Please verify your email to prevent your services from shutting down.
-            Icon.close(@click="state.setVerificationDelay") X2
 </template>
 <script setup>
 import { ref, watch } from 'vue';
@@ -148,8 +141,16 @@ watch(() => state.getServices, getServices);
         }
 
         &,
-        &.no-service {
+        &.noService {
             height: 123.33px;
+
+            .title {            
+                font-size: 20px;
+            }
+
+            span {            
+                opacity: .25;
+            }
         }
     }
 

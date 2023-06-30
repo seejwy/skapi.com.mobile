@@ -6,16 +6,14 @@ import('@/assets/main.less');
 // init state
 const state = reactive({
     user: null,
-    viewport: 'desktop',
     connection: null,
     getServices: null,
     services: null,
     showVerificationNotification: false,
     setVerificationDelay: () => {
-        localStorage.setItem('showVerificationMessage', new Date().getTime());
+        localStorage.setItem(`verification_message_${state.user.user_id}`, new Date().getTime());
         state.showVerificationNotification = false;
     },
-    viewportOnChange: (v) => v,
     blockingPromise: new Promise(res => res())
 });
 
@@ -26,15 +24,15 @@ let skapi = new Admin();
 let awaitConnection = skapi.getConnection().then(c => {
     state.connection = c;
     state.user = skapi.user;
-    const ONE_DAY = 86400;
-    if (!state.user?.email_verified && (Number(localStorage.getItem('showVerificationMessage')) + ONE_DAY) < new Date().getTime()) {
-        state.showVerificationNotification = true;
-        localStorage.removeItem('showVerificationMessage');
-    }
 });
 
 watch(() => state.user, user => {
     if (user) {
+        const ONE_DAY = 86400;
+        if (!state.user?.email_verified && (Number(localStorage.getItem(`verification_message_${state.user.user_id}`)) + ONE_DAY) < new Date().getTime()) {
+            state.showVerificationNotification = true;
+            localStorage.removeItem(`verification_message_${state.user.user_id}`);
+        }
         state.getServices = new Promise(async res => {
             if (!state.services) {
                 state.services = (await skapi.getServices());
@@ -61,19 +59,6 @@ window.addEventListener("visibilitychange", storeServices);
 
 let desktopMedia = '(min-width: 769px)';
 const desktopSize = window.matchMedia(desktopMedia);
-
-const setViewport = (e) => {
-    if (e.matches) {
-        state.viewport = 'desktop';
-    } else {
-        state.viewport = 'mobile';
-    }
-    state.viewportOnChange(state.viewport);
-};
-
-setViewport(desktopSize);
-
-desktopSize.addEventListener('change', setViewport);
 
 // init vue
 const app = createApp(App);

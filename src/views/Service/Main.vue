@@ -1,7 +1,7 @@
 <template lang="pug">
 .servicePageShell
     .sideScreen
-        NavBar(v-if="route.name !== 'mobileSearchRecord' && route.name !== 'recordSearch' && route.name !== 'mobileSearchUser' && !(route.name === 'users' && route.query.search)" style="background-color: #505050")
+        NavBar(v-if="route.name !== 'mobileSearchRecord' && route.name !== 'recordSearch' && route.name !== 'userSearch' && route.name !== 'mobileSearchUser' && !(route.name === 'users' && route.query.search)" style="background-color: #505050")
             ul.inlineVerticalMiddle
                 li
                     router-link(to="/" tag="li")
@@ -22,10 +22,7 @@
             NotExists(v-if='service === 404')
             template(v-else-if='service')
                 router-view
-
-            sui-overlay(v-else-if="state.viewport !== 'mobile'" ref="overlay" style="background: rgba(0, 0, 0, 0.6);")
-                Login
-            Login(v-else-if="!state.user")
+            Login(v-if="!state.user")
     .sidebarHolder
         .sidebar(v-if="state.user")
             router-link(:to="{name: 'service'}" :class="{'router-link-active-mobile': !route.path.split('/')[3]}")
@@ -43,13 +40,6 @@
             //- router-link(to='/')
                 //(:to="{name: 'mail'}")
             //- Icon mail
-Transition(name="toast")
-    .toast(v-if="state.user && !state.user.email_verified && state.showVerificationNotification")
-        Icon warning_bell
-        .title Email Verfication is Needed
-        div
-        .body Please verify your email to prevent your services from shutting down.
-        Icon.close(@click="state.setVerificationDelay") X2
 </template>
 
 <style lang="less">
@@ -134,18 +124,11 @@ let service = ref(null);
 
 provide('service', service);
 provide('serviceUsers', ref(null));
+provide('userStatus', ref({}));
 provide('fetchingData', ref(false));
-
-// let pageTitle = inject('pageTitle');
-// pageTitle.value = ' ';
-
-let overlay = ref(null);
 
 onMounted(() => {
     awaitConnection.then(()=>{
-        if(!state.user && state.viewport === 'desktop') {
-            overlay.value.open();
-        }
         recordTables.value = null;
     });
 });
