@@ -108,6 +108,7 @@
 import NavBar from '@/components/Navbar.vue';
 import NotExists from '@/views/Main/404.vue';
 import Login from '../Main/Login.vue';
+import Icon from '@/components/Icon.vue';
 
 import { provide, inject, watch, ref, onMounted, onBeforeUnmount, onUpdated } from 'vue';
 import { skapi, state, awaitConnection } from '@/main';
