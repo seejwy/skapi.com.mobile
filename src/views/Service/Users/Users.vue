@@ -1,6 +1,6 @@
 <template lang="pug">
 SearchNavBar(v-if="route.query.search")
-    div {{ mobilePageTitle }}
+    div {{ pageTitle }}
     template(v-slot:right) 
         Icon.placeholderIcon(@click="cancelSearch") X2        
 NavBarProxy(v-else)
@@ -17,8 +17,8 @@ NavBarProxy(v-else)
             sui-button.lineButton(type="button") Find out More
     div(style="clear:both;")
 .tableOuterWrapper(:loading="promiseRunning || null")
-    .tableActions(v-if="!route.query.search" :class="{'rounded-border' : !groupedUserList?.length && fetchingData}")
-        .headerActions(v-if="!route.query.search || groupedUserList?.length")
+    .tableActions(v-if="!route.query.search" :class="{'rounded-border' : !serviceUsers?.list?.length && fetchingData}")
+        .headerActions(v-if="!route.query.search || serviceUsers.list.length")
             div.dropdown
                 span Headers
                 Icon down2
@@ -35,44 +35,47 @@ NavBarProxy(v-else)
                 Icon trash
 
     .tableWrapper
-        table(v-if="!groupedUserList?.length && fetchingData")
+        
+        table(v-if="!serviceUsers?.list?.length && fetchingData")
             tbody
                 tr(v-for="x in numberOfSkeletons()").animation-skeleton
                     td
         table(v-else)
-            thead(v-if="groupedUserList?.length && (!fetchingData || groupedUserList?.length)")
+            thead(v-if="serviceUsers?.list?.length && (!fetchingData || serviceUsers?.list?.length)")
                 tr(:class="{rounded: fetchingData || null}")
                     th
 
                     th(style="width: 52px;") Block
-                    th(v-for="key in computedVisibleFields" :class="{'iconTd': key === 'block' || key === 'status', 'userId': key === 'user_id'}") {{ visibleFields[key].text }}
-                    th(v-if="computedVisibleFields?.length <= 2")
-            tbody(v-if="groupedUserList?.length")
-                template(v-for="batch in groupedUserList")
-                    template(v-for="page in batch")
-                        tr(v-for="(user, userIndex) in page" :key="user['user_id']" :id="user['user_id']")
-                            td
-                                sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
-                            td(style="width: 52px;")
-                                Icon(v-if="user['approved']?.includes('suspended')" style="opacity: 40%;") block
-                                Icon(v-else) unblock
-                            td(@click="router.push({name: 'userView', params: {user_id: user['user_id']}})")
-                                template(v-if="mobileVisibleField === 'group'")                     
-                                    Icon(v-if="user[mobileVisibleField] > 0") check_circle
-                                    Icon(v-else) x
-                                template(v-else-if="mobileVisibleField === 'access_group'")
-                                    span(v-if="user['group'] === 99") Admin
-                                    span(v-else) User
-                                template(v-else) {{ user[mobileVisibleField] || '-' }}
-                            td
+                    th(:class="{'iconTd': key === 'block' || key === 'status', 'userId': key === 'user_id'}") {{ visibleFields[mobileVisibleField].text }}
+            tbody(v-if="serviceUsers?.list?.length")
+                tr(v-for="user in serviceUsers.list" :key="user['user_id']" :id="user['user_id']")
+                    td
+                        sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
+                    td(style="width: 52px;")
+                        Icon(v-if="user['approved']?.includes('suspended')" style="opacity: 40%;") block
+                        Icon(v-else) unblock
+                    td(@click="router.push({name: 'userView', params: {user_id: user['user_id']}})")
+                        template(v-if="mobileVisibleField === 'group'")                     
+                            Icon(v-if="user[mobileVisibleField] > 0") check_circle
+                            Icon(v-else) x
+                        template(v-else-if="mobileVisibleField === 'access_group'")
+                            span(v-if="user['group'] === 99") Admin
+                            span(v-else) User
+                        template(v-else-if="mobileVisibleField === 'timestamp'")
+                            span {{ dateFormat(user['timestamp']) }}
+                        template(v-else-if="mobileVisibleField === 'birthdate'")
+                            span(v-if="user['birthdate']") {{ dateFormat(user['birthdate']) }}
+                            span(v-else) -
+                        template(v-else) {{ user[mobileVisibleField] || '-' }}
+                    td
                 template(v-if="fetchingData")
                     tr(v-for="x in numberOfSkeletons()").animation-skeleton
                         td
                         td(style="width: 52px;")
                         td
                         td
-    .noUsersFound(v-if="!groupedUserList?.length && !fetchingData")
-        template(v-if="!route.query.value && !groupedUserList?.length")     
+    .noUsersFound(v-if="!serviceUsers?.list?.length && !fetchingData")
+        template(v-if="!route.query.value && !serviceUsers?.list?.length")     
             .title No Users
             p You have no existing users yet
         template(v-else) 
@@ -101,9 +104,9 @@ sui-overlay(ref="confirmOverlay")
 </template>
 <script setup>
 import { inject, ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { changeSearchCondition, getValidationMessage } from '@/helper/users';
+import { changeSearchCondition } from '@/helper/users';
 import { skapi, state } from '@/main';
-import { dateFormat, groupArray } from '@/helper/common'
+import { dateFormat } from '@/helper/common'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 
 import Icon from '@/components/Icon.vue';
@@ -122,10 +125,7 @@ let numberOfUsersPerPage = 10;
 let numberOfPagePerBatch = fetchLimit / numberOfUsersPerPage;
 
 const appStyle = inject('appStyle');
-const mobilePageTitle = ref('');
-
-const currentSelectedUsersBatch = ref(0);
-const currentSelectedUsersPage = ref(0);
+const pageTitle = ref('');
 
 const visibleFields = reactive({
     approved: {
@@ -201,15 +201,6 @@ const changeSearchType = (value) => {
     changeSearchCondition(value, searchParams);
 }
 
-const groupedUserList = computed(() => {
-    if (!serviceUsers.value || !serviceUsers.value.list.length) {
-        currentSelectedUsersBatch.value = 0;
-        return null;
-    }
-
-    return groupArray(serviceUsers.value.list, numberOfUsersPerPage, numberOfPagePerBatch);
-});
-
 const getCleanSearchParams = () => {
     let params = {
         ...searchParams
@@ -242,10 +233,6 @@ const callSearch = () => {
     });
 }
 const mobileVisibleField = ref('user_id');
-
-const computedVisibleFields = computed(() => {
-    [mobileVisibleField.value];
-});
 const selectedBlockedUsers = ref([]);
 const selectedUnblockedUsers = ref([]);
 
@@ -254,7 +241,8 @@ const selectedUsers = computed(() => {
 });
 
 const userSelectionHandler = (e) => {
-    let user = groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value].find((user) => {
+    let user = serviceUsers.value.list.find((user) => {
+        console.log(user.user_id === e.target.value)
         return user.user_id === e.target.value;
     });
     if (e.target.checked) {
@@ -272,21 +260,6 @@ const userSelectionHandler = (e) => {
     }
 };
 
-const selectAllHandler = (e) => {
-    selectedBlockedUsers.value = [];
-    selectedUnblockedUsers.value = [];
-
-    if (e.target.checked) {
-        groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value].map(user => {
-            if (user.approved.includes('suspended')) {
-                selectedBlockedUsers.value.push(user.user_id);
-            } else {
-                selectedUnblockedUsers.value.push(user.user_id);
-            }
-        });
-    }
-};
-
 // flag
 let fetchingData = inject('fetchingData');
 let isFabOpen = ref(false);
@@ -298,17 +271,14 @@ let searchResult = inject('searchResult');
 let getMoreUsersQueue = null;
 
 async function getMoreUsers() {
-    if (fetchingData.value || serviceUsers.value?.endOfList && groupedUserList.value.length - 1 === currentSelectedUsersBatch.value) {
+    console.log("Called", fetchingData.value, serviceUsers.value?.endOfList)
+    if (fetchingData.value || serviceUsers.value?.endOfList) {
         return;
     }
-    fetchingData.value = true;
 
-    if (groupedUserList.value.length - 1 > currentSelectedUsersBatch.value) {
-        currentSelectedUsersBatch.value += 1;
-        currentSelectedUsersPage.value = 0;
-        fetchingData.value = false;
-        return;
-    }
+    console.log('running')
+
+    fetchingData.value = true;
 
     if (getMoreUsersQueue instanceof Promise) {
         return;
@@ -334,8 +304,6 @@ async function getMoreUsers() {
     serviceUsers.value.list = serviceUsers.value.list.concat(result.list);
 
     getMoreUsersQueue = null;
-    currentSelectedUsersBatch.value++;
-    currentSelectedUsersPage.value = 0;
     fetchingData.value = false;
 }
 
@@ -390,7 +358,7 @@ if (route.query.search) {
 const toggleMobileDesktopSearchView = () => {
     if (route.query.search) {
         appStyle.mainPadding = '0';
-        mobilePageTitle.value = `${visibleFields[route.query.search].text} : ${route.query.value}`;
+        pageTitle.value = `${visibleFields[route.query.search].text} : ${route.query.value}`;
         appStyle.background = '#333333';
     } else {
         appStyle.mainPadding = null;
@@ -438,10 +406,10 @@ const blockUsers = async () => {
 
     await Promise.all(blockPromise);
     selectedUnblockedUsers.value.forEach((sel) => {
-        let idx = groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value].findIndex((item) => {
+        let idx = serviceUsers.value.list.findIndex((item) => {
             return item.user_id === sel
         });
-        groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value][idx].approved = 'admin:suspended';
+        serviceUsers.value.list[idx].approved = 'admin:suspended';
     });
 
     selectedBlockedUsers.value = [...selectedUnblockedUsers.value];
@@ -466,10 +434,10 @@ const unblockUsers = async () => {
 
     await Promise.all(unblockPromise);
     selectedBlockedUsers.value.forEach((sel) => {
-        let idx = groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value].findIndex((item) => {
+        let idx = serviceUsers.value.list.findIndex((item) => {
             return item.user_id === sel
         });
-        groupedUserList.value[currentSelectedUsersBatch.value][currentSelectedUsersPage.value][idx].approved = 'admin:approved';
+        serviceUsers.value.list[idx].approved = 'admin:approved';
     });
     selectedUnblockedUsers.value = [...selectedBlockedUsers.value];
     selectedBlockedUsers.value = [];
@@ -525,11 +493,6 @@ onMounted(() => {
 
     window.addEventListener('scroll', mobileScrollHandler, { passive: true });
     toggleMobileDesktopSearchView();
-});
-
-watch([currentSelectedUsersBatch, currentSelectedUsersPage], () => {
-    selectedBlockedUsers.value = [];
-    selectedUnblockedUsers.value = [];
 });
 
 watch(() => route.query, () => {
