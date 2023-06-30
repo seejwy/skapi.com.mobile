@@ -7,7 +7,6 @@ NavBarProxy
         Users are individuals who have successfully created an account and logged in at least once. 
         You can perform searches and apply access control on this page.
         Find out how you can easily perform authentication and manage your users.
-
     .action
         a(href="https://docs.skapi.com/authentication" target="_blank")
             sui-button.lineButton(type="button") Find out More
@@ -44,26 +43,31 @@ NavBarProxy
                     th(style="width: 52px;") Block
                     th(:class="{'iconTd': key === 'block' || key === 'status', 'userId': key === 'user_id'}") {{ visibleFields[mobileVisibleField].text }}
             tbody(v-if="serviceUsers?.list?.length")
-                tr(v-for="user in serviceUsers.list" :key="user['user_id']" :id="user['user_id']")
-                    td
-                        sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
-                    td(style="width: 52px;")
-                        Icon(v-if="user['approved']?.includes('suspended')" style="opacity: 40%;") block
-                        Icon(v-else) unblock
-                    td(@click="router.push({name: 'userView', params: {user_id: user['user_id']}})")
-                        template(v-if="mobileVisibleField === 'group'")                     
-                            Icon(v-if="user[mobileVisibleField] > 0") check_circle
-                            Icon(v-else) x
-                        template(v-else-if="mobileVisibleField === 'access_group'")
-                            span(v-if="user['group'] === 99") Admin
-                            span(v-else) User
-                        template(v-else-if="mobileVisibleField === 'timestamp'")
-                            span {{ dateFormat(user['timestamp']) }}
-                        template(v-else-if="mobileVisibleField === 'birthdate'")
-                            span(v-if="user['birthdate']") {{ dateFormat(user['birthdate']) }}
-                            span(v-else) -
-                        template(v-else) {{ user[mobileVisibleField] || '-' }}
-                    td
+                template(v-for="user in serviceUsers.list" :key="user['user_id']" :id="user['user_id']")
+                    tr(v-if="userStatus[user.user_id] !== 'deleted'")
+                        td
+                            sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
+                        td(style="width: 52px;")
+                            template(v-if="userStatus[user.user_id]")
+                                Icon(v-if="userStatus[user.user_id].includes('suspended')" style="opacity: 40%;") block
+                                Icon(v-else) unblock
+                            template(v-else)
+                                Icon(v-if="user['approved']?.includes('suspended')" style="opacity: 40%;") block
+                                Icon(v-else) unblock
+                        td(@click="router.push({name: 'userView', params: {user_id: user['user_id']}})")
+                            template(v-if="mobileVisibleField === 'group'")                     
+                                Icon(v-if="user[mobileVisibleField] > 0") check_circle
+                                Icon(v-else) x
+                            template(v-else-if="mobileVisibleField === 'access_group'")
+                                span(v-if="user['group'] === 99") Admin
+                                span(v-else) User
+                            template(v-else-if="mobileVisibleField === 'timestamp'")
+                                span {{ dateFormat(user['timestamp']) }}
+                            template(v-else-if="mobileVisibleField === 'birthdate'")
+                                span(v-if="user['birthdate']") {{ dateFormat(user['birthdate']) }}
+                                span(v-else) -
+                            template(v-else) {{ user[mobileVisibleField] || '-' }}
+                        td
                 template(v-if="fetchingData")
                     tr(v-for="x in numberOfSkeletons()").animation-skeleton
                         td
@@ -206,6 +210,7 @@ let isFabOpen = ref(false);
 
 // data
 let serviceUsers = inject('serviceUsers');
+let userStatus = inject('userStatus');
 let searchResult = inject('searchResult');
 
 let getMoreUsersQueue = null;
