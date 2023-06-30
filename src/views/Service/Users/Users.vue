@@ -130,11 +130,11 @@ const currentSelectedUsersPage = ref(0);
 const visibleFields = reactive({
     approved: {
         text: 'Block',
-        show: state?.viewport === 'desktop',
+        show: false
     },
     group: {
         text: 'Active',
-        show: state?.viewport === 'desktop',
+        show: false
     },
     access_group: {
         text: 'Access',
@@ -146,11 +146,11 @@ const visibleFields = reactive({
     },
     name: {
         text: 'Name',
-        show: state?.viewport === 'desktop',
+        show: false
     },
     email: {
         text: 'Email',
-        show: state?.viewport === 'desktop',
+        show: false
     },
     address: {
         text: 'Address',

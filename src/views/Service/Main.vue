@@ -133,16 +133,8 @@ provide('service', service);
 provide('serviceUsers', ref(null));
 provide('fetchingData', ref(false));
 
-// let pageTitle = inject('pageTitle');
-// pageTitle.value = ' ';
-
-let overlay = ref(null);
-
 onMounted(() => {
     awaitConnection.then(()=>{
-        if(!state.user && state.viewport === 'desktop') {
-            overlay.value.open();
-        }
         recordTables.value = null;
     });
 });

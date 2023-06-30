@@ -20,12 +20,6 @@ provide('pageTitle', pageTitle);
 provide('navbarMobileRightButton', ref(null));
 provide('navbarBackDestination', ref(null));
 
-let viewport = ref(state.viewport);
-provide('viewport', viewport);
-state.viewportOnChange = v => {
-  viewport.value = v;
-};
-
 provide('appStyle', {
   get background() {
     return document.body.style.getPropertyValue('--app-bg-color');
