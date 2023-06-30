@@ -4,7 +4,7 @@ SearchNavBar
     template(v-slot:right) 
         Icon.placeholderIcon(@click="cancelSearch") X2
 .tableOuterWrapper(:loading="promiseRunning || null")
-    .tableActions(:class="{'rounded-border' : !serviceUsers?.list?.length && fetchingData}")
+    .tableActions(:class="{'rounded-border' : !searchResults?.list?.length && fetchingData}")
         .headerActions
             div.dropdown
                 span Headers
@@ -21,19 +21,19 @@ SearchNavBar
                 Icon trash
 
     .tableWrapper
-        table(v-if="!serviceUsers?.list?.length && fetchingData")
+        table(v-if="!searchResults?.list?.length && fetchingData")
             tbody
                 tr(v-for="x in numberOfSkeletons()").animation-skeleton
                     td
         table(v-else)
-            thead(v-if="serviceUsers?.list?.length && (!fetchingData || serviceUsers?.list?.length)")
+            thead(v-if="searchResults?.list?.length && (!fetchingData || searchResults?.list?.length)")
                 tr(:class="{rounded: fetchingData || null}")
                     th
 
                     th(style="width: 52px;") Block
                     th(:class="{'iconTd': key === 'block' || key === 'status', 'userId': key === 'user_id'}") {{ visibleFields[mobileVisibleField].text }}
-            tbody(v-if="serviceUsers?.list?.length")
-                tr(v-for="user in serviceUsers.list" :key="user['user_id']" :id="user['user_id']")
+            tbody(v-if="searchResults?.list?.length")
+                tr(v-for="user in searchResults.list" :key="user['user_id']" :id="user['user_id']")
                     td
                         sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
                     td(style="width: 52px;")
@@ -59,7 +59,7 @@ SearchNavBar
                         td(style="width: 52px;")
                         td
                         td
-    .noUsersFound(v-if="!serviceUsers?.list?.length && !fetchingData")
+    .noUsersFound(v-if="!searchResults?.list?.length && !fetchingData")
         .title No Users Found
         p There were no users matching the query.
 sui-overlay(ref="confirmOverlay")
@@ -90,7 +90,8 @@ let router = useRouter();
 let serviceId = route.params.service;
 
 const service = inject('service');
-let serviceUsers = ref(null)
+let searchResults = ref(null);
+let serviceUsers = inject('serviceUsers');
 
 let fetchLimit = 50;
 
@@ -159,7 +160,7 @@ const confirmOverlay = ref(null);
 const actionType = ref('');
 
 const cancelSearch = () => {
-    serviceUsers.value = null;
+    searchResults.value = null;
     router.push({ name: 'mobileSearchUser' });
 }
 
@@ -179,7 +180,7 @@ const getCleanSearchParams = () => {
 }
 const callSearch = () => {
     fetchingData.value = true;
-    serviceUsers.value = null;
+    searchResults.value = null;
 
     let params = getCleanSearchParams();
 
@@ -188,7 +189,7 @@ const callSearch = () => {
         limit: fetchLimit
     }).then((res) => {
         fetchingData.value = false;
-        serviceUsers.value = {
+        searchResults.value = {
             endOfList: res.endOfList,
             list: res.list
         };
@@ -203,7 +204,7 @@ const selectedUsers = computed(() => {
 });
 
 const userSelectionHandler = (e) => {
-    let user = serviceUsers.value.list.find((user) => {
+    let user = searchResults.value.list.find((user) => {
         return user.user_id === e.target.value;
     });
     if (e.target.checked) {
@@ -229,7 +230,7 @@ let isFabOpen = ref(false);
 let getMoreUsersQueue = null;
 
 async function getMoreUsers() {
-    if (fetchingData.value || serviceUsers.value?.endOfList) {
+    if (fetchingData.value || searchResults.value?.endOfList) {
         return;
     }
 
@@ -251,9 +252,9 @@ async function getMoreUsers() {
         });
 
     let result = await getMoreUsersQueue;
-    serviceUsers.value.endOfList = result.endOfList;
+    searchResults.value.endOfList = result.endOfList;
 
-    serviceUsers.value.list = serviceUsers.value.list.concat(result.list);
+    searchResults.value.list = searchResults.value.list.concat(result.list);
 
     getMoreUsersQueue = null;
     fetchingData.value = false;
@@ -267,13 +268,13 @@ const mobileScrollHandler = (e) => {
 
 function getUsers(refresh = false) {
     // initial table fetch
-    if (!refresh && serviceUsers.value) {
+    if (!refresh && searchResults.value) {
         // bypass if already fetched
         fetchingData.value = false;
         return;
     }
 
-    serviceUsers.value = null;
+    searchResults.value = null;
     fetchingData.value = true;
 
     let params = {
@@ -285,7 +286,7 @@ function getUsers(refresh = false) {
 
     skapi.getUsers(searchParams, { limit: fetchLimit })
         .then(t => {
-            serviceUsers.value = {
+            searchResults.value = {
                 endOfList: t.endOfList,
                 list: t.list,
                 params
@@ -345,10 +346,10 @@ const blockUsers = async () => {
 
     await Promise.all(blockPromise);
     selectedUnblockedUsers.value.forEach((sel) => {
-        let idx = serviceUsers.value.list.findIndex((item) => {
+        let idx = searchResults.value.list.findIndex((item) => {
             return item.user_id === sel
         });
-        serviceUsers.value.list[idx].approved = 'admin:suspended';
+        searchResults.value.list[idx].approved = 'admin:suspended';
     });
 
     selectedBlockedUsers.value = [...selectedUnblockedUsers.value];
@@ -373,10 +374,10 @@ const unblockUsers = async () => {
 
     await Promise.all(unblockPromise);
     selectedBlockedUsers.value.forEach((sel) => {
-        let idx = serviceUsers.value.list.findIndex((item) => {
+        let idx = searchResults.value.list.findIndex((item) => {
             return item.user_id === sel
         });
-        serviceUsers.value.list[idx].approved = 'admin:approved';
+        searchResults.value.list[idx].approved = 'admin:approved';
     });
     selectedUnblockedUsers.value = [...selectedBlockedUsers.value];
     selectedBlockedUsers.value = [];
@@ -405,8 +406,8 @@ const deleteUsers = async () => {
         let result = await Promise.all(deletePromise);
 
         selectedUsers.value.forEach((user) => {
-            let idx = serviceUsers.value.list.findIndex((res) => res.user_id === user);
-            serviceUsers.value.list.splice(idx, 1);
+            let idx = searchResults.value.list.findIndex((res) => res.user_id === user);
+            searchResults.value.list.splice(idx, 1);
         });
         selectedBlockedUsers.value = [];
         selectedUnblockedUsers.value = [];
