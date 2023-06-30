@@ -124,6 +124,7 @@ let service = ref(null);
 
 provide('service', service);
 provide('serviceUsers', ref(null));
+provide('userStatus', ref({}));
 provide('fetchingData', ref(false));
 
 onMounted(() => {

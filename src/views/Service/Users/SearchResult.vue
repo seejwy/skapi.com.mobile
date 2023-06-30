@@ -91,7 +91,7 @@ let serviceId = route.params.service;
 
 const service = inject('service');
 let searchResults = ref(null);
-let serviceUsers = inject('serviceUsers');
+let userStatus = inject('userStatus');
 
 let fetchLimit = 50;
 
@@ -349,6 +349,8 @@ const blockUsers = async () => {
         let idx = searchResults.value.list.findIndex((item) => {
             return item.user_id === sel
         });
+
+        userStatus.value[searchResults.value.list[idx].user_id] = 'admin:suspended';
         searchResults.value.list[idx].approved = 'admin:suspended';
     });
 
@@ -377,6 +379,8 @@ const unblockUsers = async () => {
         let idx = searchResults.value.list.findIndex((item) => {
             return item.user_id === sel
         });
+
+        userStatus.value[searchResults.value.list[idx].user_id] = 'admin:approved';
         searchResults.value.list[idx].approved = 'admin:approved';
     });
     selectedUnblockedUsers.value = [...selectedBlockedUsers.value];
@@ -407,6 +411,8 @@ const deleteUsers = async () => {
 
         selectedUsers.value.forEach((user) => {
             let idx = searchResults.value.list.findIndex((res) => res.user_id === user);
+        
+            userStatus.value[searchResults.value.list[idx].user_id] = 'deleted';
             searchResults.value.list.splice(idx, 1);
         });
         selectedBlockedUsers.value = [];
