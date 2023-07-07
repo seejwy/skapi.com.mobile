@@ -77,6 +77,15 @@ export default class Admin extends Skapi {
         return this.request('grant-access', params, { auth: true });
     }
 
+    async deleteHostFile(params) {
+        let { keys, service } = params;
+        return this.deleteFiles({
+            endpoints: keys,
+            service,
+            storage: 'host'
+        });
+    }
+
     async getServices(id) {
         await this.checkAdmin();
         if (id) {
