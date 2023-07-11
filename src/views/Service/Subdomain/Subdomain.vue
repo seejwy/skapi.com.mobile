@@ -1,15 +1,14 @@
 <template lang="pug">
 NavBarProxy
     template(v-slot:title)
-        div(v-if="service.subdomain") Edit Subdomain
-        div(v-else) Create Subdomain
+        div Create Subdomain
     template(v-slot:rightButton)
         div
-.overlay-container 
+.overlay-container(:loading="isSaving || null") 
     form.admin(@submit.prevent="saveSubdomain" action="")
-        sui-input(type="text" placeholder="Subdomain Name" :value="subdomain" @input="(e) => serviceName = e.target.value" required)
-        SubmitButton(v-if="service?.subdomain") Save
-        SubmitButton(v-else) Create
+        sui-input(type="text" placeholder="Subdomain Name" :value="subdomain" @input="(e) => subdomain = e.target.value" required)
+        .error {{ errorMessage }}
+        SubmitButton(:loading="isSaving") Create
 </template>
 <!-- script below -->
 <script setup>
@@ -27,6 +26,11 @@ let appStyle = inject('appStyle');
 let service = inject('service');
 const subdomain = ref(service.value.subdomain);
 const isSaving = ref(false);
+const errorMessage = ref('');
+
+if(service.value.subdomain) {
+    router.replace({name: 'service'})
+}
 
 const saveSubdomain = () => {
     isSaving.value = true;
@@ -35,9 +39,19 @@ const saveSubdomain = () => {
         exec: 'register',
         service: service.value.service
     }).then((res) => {
+        skapi.getServices(service.value.service).then((res) => {
+            state.services = res;
+            service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+
+            router.replace({name: 'service'})
+        })
+    }).catch((e) => {
+        console.log({e});
+        errorMessage.value = 'This subdomain has already been taken.';
+
+    }).finally(() => {
         isSaving.value = false;
-        router.replace({name: 'service'})
-    })
+    });
 }
 
 appStyle.background = '#333333';
@@ -57,13 +71,16 @@ onBeforeUnmount(() => {
 
     sui-input {
         display: block;
-        margin-bottom: 40px;
         width: 100%;
 
         &[type=submit] {
             display: inline-block;
             width: unset;
         }
+    }
+
+    .error {
+        color: #f04e4e;
     }
 }
 </style>

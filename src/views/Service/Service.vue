@@ -82,9 +82,9 @@ template(v-else)
             .titleWrapper
                 Icon domain
                 h2 Subdomain 
-            .actions(@click="router.push('?edit=subdomain')" :class="{'disabled': !state.user.email_verified ? true : null}")
-                Icon(v-if="service.subdomain") pencil
-                Icon(v-else) plus
+            .actions(:class="{'disabled': !state.user.email_verified ? true : null}")
+                Icon(v-if="service.subdomain" @click="deleteSubdomainAsk") trash
+                Icon(v-else @click="router.push('?edit=subdomain')" ) plus
         .innerContainer
             .domainGrid(v-if="!service.subdomain")
                 div No Domain Created
@@ -122,6 +122,18 @@ sui-overlay(ref="deleteConfirmOverlay")
         .foot
             sui-button(type="button" @click="()=> { deleteConfirmOverlay.close(); confirmationCode = ''}").textButton Cancel
             SubmitButton(:loading="isDisabled" class="textButton" backgroundColor="51, 51, 51") Delete
+sui-overlay(ref="deleteSubdomainOverlay")
+    form.popup(@submit.prevent="deleteSubdomain" action="" :loading="isDisabled || null")
+        .title
+            Icon warning
+            div Deleting Subdomain?
+        .body 
+            p Are you sure you want to delete "{{ service.subdomain }}" permanently? #[br] All uploaded files will be deleted along with your subdomain. You will not be able to undo this action.
+            p To confirm deletion, enter Subdomain Name #[br] #[span(style="font-weight: bold") {{ service.subdomain }}]
+            sui-input(:placeholder="service.subdomain" :value="confirmationCode" @input="(e) => confirmationCode = e.target.value")
+        .foot
+            sui-button(type="button" @click="()=> { deleteSubdomainOverlay.close(); confirmationCode = ''}").textButton Cancel
+            SubmitButton(:loading="isDisabled" class="textButton" backgroundColor="51, 51, 51") Delete
 sui-overlay(ref="deleteErrorOverlay")
     .popup
         .title
@@ -149,15 +161,15 @@ const route = useRoute();
 const router = useRouter();
 
 let service = inject('service');
-// let pageTitle = inject('pageTitle');
-// pageTitle.value = 'Service "' + service.value.name + '"'
 
 const deleteConfirmOverlay = ref(null);
+const deleteSubdomainOverlay = ref(null);
 const deleteErrorOverlay = ref(null);
 const confirmationCode = ref('');
 const deleteErrorMessage = ref('');
 const isEdit = ref(false);
 const isDisabled = ref(false);
+const isDeleting = ref(false);
 
 const fileList = reactive({});
 const fileUpload = ref(null);
@@ -264,18 +276,6 @@ const uploadFiles = () => {
     }
 }
 
-const registerSubdomain = () => {
-    console.log(service.value)
-    let sub = skapi.registerSubdomain({
-        service: service.value.service,
-        subdomain: 'hello',
-        exec: 'register'
-    }).then((res) => {
-        console.log(res)
-    })
-}
-// registerSubdomain()
-
 const edit = () => {
     if (!state.user.email_verified) return false;
     router.push('?edit=service');
@@ -289,6 +289,11 @@ const editFiles = () => {
 const deleteServiceAsk = () => {
     if (!state.user.email_verified) return;
     deleteConfirmOverlay.value.open();
+}
+
+const deleteSubdomainAsk = () => {
+    if (!state.user.email_verified) return;
+    deleteSubdomainOverlay.value.open();
 }
 
 const onDrop = (event) => {
@@ -354,49 +359,50 @@ const deleteService = () => {
     });
 }
 
+const deleteSubdomain = async() => {
+    isDisabled.value = true;
+    if (confirmationCode.value !== service.value.subdomain) {
+        confirmationCode.value = '';
+        deleteErrorMessage.value = "Your subdomain did not match.";
+        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+        deleteErrorOverlay.value.open();
+        isDisabled.value = false;
+        return;
+    }
+
+    try {
+        await skapi.registerSubdomain({
+            service: service.value.service,
+            subdomain: service.value.subdomain,
+            exec: 'remove'
+        }).then(() => {
+            skapi.getServices(service.value.service).then((res) => {
+                state.services = res;
+                service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+            })
+            if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+            if(service.value.subdomain) {
+                if(service.value.subdomain.includes('*')) {
+                    isDeleting.value = true;
+                    isDisabled.value = false;
+                } else {
+                    isDeleting.value = false;
+                }
+            }
+        })
+    } catch(e) {
+        deleteErrorMessage.value = e.message;
+        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+        deleteErrorOverlay.value.open();
+        isDisabled.value = false;
+    }
+}
+
 if (!service.value.hasOwnProperty('storage')) {
     skapi.storageInformation(service.value.service).then((storage) => {
         service.value.storage = storage.cloud + storage.database + storage.email;
     });
 }
-
-// const getDirectory = (directory) => {
-//     if (!directory && service.value.hasOwnProperty('files')) return;
-//     let params = {
-//         service: service.value.service
-//     }
-
-//     if (directory) {
-//         params.dir = directory;
-//     }
-
-//     skapi.listHostDirectory(params).then((files) => {
-//         console.log(files);
-//         if (!service.value.hasOwnProperty('files')) service.value.files = {};
-
-//         for (let file of files.list) {
-//             if (file.type === 'folder') {
-//                 let dir = file.name.substring(file.name.indexOf("/") + 1);
-//                 service.value.files[dir] = {
-//                     type: 'folder',
-//                     name: dir
-//                 }
-//             } else {
-//                 let name = file.name.substring(file.name.indexOf("/") + 1);
-//                 let subdomain = file.name.substring(0, file.name.indexOf("/"));
-//                 let url = `https://${subdomain}.skapi.com/${name}`
-//                 service.value.files[name] = {
-//                     type: 'file',
-//                     name: name,
-//                     url,
-
-//                 };
-//             }
-//         }
-//     });
-// }
-
-// getDirectory();
 </script>
 <style lang="less" scoped>
 @import '@/assets/variables.less';
