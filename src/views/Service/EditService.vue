@@ -55,7 +55,6 @@ import Icon from '@/components/Icon.vue';
 let router = useRouter();
 let appStyle = inject('appStyle');
 let service = inject('service');
-let navbarMobileRightButton = inject('navbarMobileRightButton');
 let isDisabled = ref(false);
 const serviceStatus = ref(0);
 const serviceName = ref('');

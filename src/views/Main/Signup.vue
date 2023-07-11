@@ -333,6 +333,10 @@ function signup() {
 
         &.active {
             background-color: var(--primary-color);
+            
+            & ~ .ball {        
+                cursor: default;
+            }
         }
 
         &:last-child {

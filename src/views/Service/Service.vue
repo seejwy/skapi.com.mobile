@@ -3,6 +3,9 @@ NavBarProxy(backgroundColor="#505050")
     template(v-slot:title)
         div Service: "{{ service.name }}"
 EditService(v-if="state?.user && route.query.edit === 'service'")
+Subdomain(v-else-if="state?.user && route.query.edit === 'subdomain'")
+EditFiles(v-else-if="state?.user && route.query.edit === 'files'")
+//- AddFiles(v-else-if="state?.user && route.query.edit === 'upload'")
 template(v-else)
     .pageHeader.headSpaceHelper
         h2 Service
@@ -74,6 +77,39 @@ template(v-else)
                             span Email System
                         .body Users are data that your service user's will store and read from your service database. 
                     .goto Go to Mail >
+    .container 
+        .titleActionsWrapper
+            .titleWrapper
+                Icon domain
+                h2 Subdomain 
+            .actions(@click="router.push('?edit=subdomain')" :class="{'disabled': !state.user.email_verified ? true : null}")
+                Icon(v-if="service.subdomain") pencil
+                Icon(v-else) plus
+        .innerContainer
+            .domainGrid(v-if="!service.subdomain")
+                div No Domain Created
+            .domainGrid(v-else-if="service?.subdomain?.substring(0,1) !== '*'")
+                .domainGridItem
+                    .name
+                        span Subdomain
+                    .value
+                        span {{ service.subdomain }}.skapi.com
+                    a(:href="`https://${service.subdomain}.skapi.com`" target="_blank")
+                        Icon link
+                    //- a(:href="`https://www.google.com`" target="_blank")
+                    //-     Icon link
+                .manageFiles(@click="editFiles") 
+                    span Manage Files
+                    Icon right
+                
+                .manageFiles(@click="() => skapi.refreshCDN({service: service.service, subdomain: service.subdomain})") 
+                    span Refresh CDN
+                    Icon refresh
+
+                
+            .domainGrid.deleting(v-else) 
+                h3 Deleting subdomain ...
+                span It may take a few minutes for a subdomain to be deleted.
 sui-overlay(ref="deleteConfirmOverlay")
     form.popup(@submit.prevent="deleteService" action="" :loading="isDisabled || null")
         .title
@@ -103,6 +139,9 @@ import { useRoute, useRouter } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
 import EditService from '@/views/Service/EditService.vue';
+import Subdomain from '@/views/Service/Subdomain/Subdomain.vue';
+import EditFiles from '@/views/Service/Subdomain/EditFiles.vue';
+import AddFiles from '@/views/Service/Subdomain/AddFiles.vue';
 import Icon from '@/components/Icon.vue';
 import SubmitButton from '@/components/SubmitButton.vue';
 
@@ -119,6 +158,10 @@ const confirmationCode = ref('');
 const deleteErrorMessage = ref('');
 const isEdit = ref(false);
 const isDisabled = ref(false);
+
+const fileList = reactive({});
+const fileUpload = ref(null);
+const folderUpload = ref(null);
 
 const informationGrid = reactive([
     {
@@ -195,56 +238,178 @@ const settingGrid = reactive([
     },
 ]);
 
+const addFileButtonHandler = () => {
+    const parent = fileUpload.value.click();
+}
+
+const addFolderButtonHandler = () => {
+    const parent = folderUpload.value.click();
+}
+
+const addFiles = (event) => {
+    const files = event.target.files;
+
+    for (let file of files) {
+        fileList[file.webkitRelativePath] = file;
+    }
+}
+
+const uploadFiles = () => {
+    let formData = new FormData();
+    for (let key in fileList) {
+        formData.append(key, fileList[key], key);
+    }
+    for (const pair of formData.entries()) {
+        console.log(`${pair[0]}, ${pair[1]}`);
+    }
+}
+
+const registerSubdomain = () => {
+    console.log(service.value)
+    let sub = skapi.registerSubdomain({
+        service: service.value.service,
+        subdomain: 'hello',
+        exec: 'register'
+    }).then((res) => {
+        console.log(res)
+    })
+}
+// registerSubdomain()
+
 const edit = () => {
-    if(!state.user.email_verified) return false;
+    if (!state.user.email_verified) return false;
     router.push('?edit=service');
 }
 
+const editFiles = () => {
+    if (!state.user.email_verified) return false;
+    router.push('?edit=files');
+}
+
 const deleteServiceAsk = () => {
-    if(!state.user.email_verified) return;
+    if (!state.user.email_verified) return;
     deleteConfirmOverlay.value.open();
+}
+
+const onDrop = (event) => {
+    const readEntriesAsync = (item) => {
+        let reader = item.createReader();
+        reader.readEntries((contents) => {
+            console.log("d")
+            for (let content of contents) {
+                if (content.isDirectory) {
+                    readEntriesAsync(content)
+                } else {
+                    getFileAsync(content, content.fullPath)
+                }
+            }
+        })
+    }
+
+    const getFileAsync = (item, path) => {
+        item.file((f) => {
+            if (path) {
+                fileList[path?.substring(1)] = f
+            } else {
+                fileList[f.name] = f;
+            }
+        });
+    }
+
+    let items = event.dataTransfer.items;
+    event.preventDefault();
+
+    for (let item of items) {
+        let content = item.webkitGetAsEntry();
+        console.log(content)
+        if (content.isDirectory) {
+            readEntriesAsync(content);
+        } else {
+            getFileAsync(content);
+        }
+    }
 }
 
 const deleteService = () => {
     isDisabled.value = true;
-    if(confirmationCode.value !== service.value.service) {
+    if (confirmationCode.value !== service.value.service) {
         confirmationCode.value = '';
         deleteErrorMessage.value = "Your service code did not match.";
-        if(deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
+        if (deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
         deleteErrorOverlay.value.open();
         isDisabled.value = false;
         return;
     }
 
     skapi.deleteService(service.value.service).then(() => {
-        if(deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
+        if (deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
         router.replace('/admin');
     }).catch(() => {
         deleteErrorMessage.value = "Please disable your service before deleting it.";
-        if(deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
+        if (deleteConfirmOverlay.value) deleteConfirmOverlay.value.close();
         deleteErrorOverlay.value.open();
-    }).finally(() => {    
+    }).finally(() => {
         confirmationCode.value = '';
         isDisabled.value = false;
     });
 }
 
-if(!service.value.hasOwnProperty('storage')) {
+if (!service.value.hasOwnProperty('storage')) {
     skapi.storageInformation(service.value.service).then((storage) => {
         service.value.storage = storage.cloud + storage.database + storage.email;
     });
 }
+
+// const getDirectory = (directory) => {
+//     if (!directory && service.value.hasOwnProperty('files')) return;
+//     let params = {
+//         service: service.value.service
+//     }
+
+//     if (directory) {
+//         params.dir = directory;
+//     }
+
+//     skapi.listHostDirectory(params).then((files) => {
+//         console.log(files);
+//         if (!service.value.hasOwnProperty('files')) service.value.files = {};
+
+//         for (let file of files.list) {
+//             if (file.type === 'folder') {
+//                 let dir = file.name.substring(file.name.indexOf("/") + 1);
+//                 service.value.files[dir] = {
+//                     type: 'folder',
+//                     name: dir
+//                 }
+//             } else {
+//                 let name = file.name.substring(file.name.indexOf("/") + 1);
+//                 let subdomain = file.name.substring(0, file.name.indexOf("/"));
+//                 let url = `https://${subdomain}.skapi.com/${name}`
+//                 service.value.files[name] = {
+//                     type: 'file',
+//                     name: name,
+//                     url,
+
+//                 };
+//             }
+//         }
+//     });
+// }
+
+// getDirectory();
 </script>
 <style lang="less" scoped>
 @import '@/assets/variables.less';
+
 .container {
     margin: 40px 0 0;
     border-radius: 0;
 
-    .innerContainer {    
+    .innerContainer {
         padding: 20px;
         background: #434343;
         border-radius: 12px;
+
         .titleActionsWrapper {
             margin-bottom: 32px;
 
@@ -284,7 +449,7 @@ if(!service.value.hasOwnProperty('storage')) {
         justify-content: space-between;
         margin-bottom: 16px;
 
-        h2 {        
+        h2 {
             font-size: 20px;
             font-weight: normal;
         }
@@ -303,9 +468,11 @@ if(!service.value.hasOwnProperty('storage')) {
     .actions {
         cursor: pointer;
         user-select: none;
+
         svg {
             margin-right: 4px;
         }
+
         span {
             vertical-align: middle;
         }
@@ -321,6 +488,53 @@ if(!service.value.hasOwnProperty('storage')) {
 
     &:last-child {
         margin-bottom: 0;
+    }
+}
+
+.fileUploadArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    border: 1px dashed #FFFFFF;
+    border-radius: 8px;
+    height: 100px;
+
+    sui-button {
+        vertical-align: middle;
+    }
+
+    &:only-child {
+        margin-bottom: 0;
+    }
+
+    &>div>* {
+        display: inline-block;
+
+        &:first-child {
+            margin-right: 6px;
+        }
+
+        &:last-child {
+            margin-left: 6px;
+        }
+    }
+
+    svg {
+        height: 57px;
+        width: 57px;
+        color: rgba(255, 255, 255, .6);
+    }
+
+    .error {
+        color: #FF8D3B;
+
+        svg {
+            height: 24px;
+            width: 24px;
+            fill: #FF8D3B;
+        }
     }
 }
 
@@ -348,9 +562,10 @@ if(!service.value.hasOwnProperty('storage')) {
             color: rgba(255, 255, 255, 0.85);
             word-break: break-all;
         }
-        
+
         @media @phone {
-        // @media screen and (max-width: 520px) {
+
+            // @media screen and (max-width: 520px) {
             &.span-2 {
                 grid-column: span 2;
             }
@@ -383,6 +598,7 @@ if(!service.value.hasOwnProperty('storage')) {
 
     @media @phone {
         grid-template-columns: repeat(1, 1fr);
+
         &Item {
             &.span-2 {
                 grid-column: span 1;
@@ -394,7 +610,7 @@ if(!service.value.hasOwnProperty('storage')) {
 .settingGrid {
     display: grid;
     column-gap: 12px;
-    row-gap:28px;
+    row-gap: 28px;
 
     &Item {
         .name {
@@ -413,7 +629,7 @@ if(!service.value.hasOwnProperty('storage')) {
             color: rgba(255, 255, 255, 0.85);
             word-break: break-all;
 
-            span {    
+            span {
                 vertical-align: middle;
             }
         }
@@ -426,6 +642,7 @@ if(!service.value.hasOwnProperty('storage')) {
 
     @media screen and (max-width: 1000px) {
         grid-template-columns: repeat(2, calc(50% - 6px));
+
         &Item {
             &.actions {
                 grid-column: span 2;
@@ -440,14 +657,14 @@ if(!service.value.hasOwnProperty('storage')) {
         flex-direction: column;
 
         &Item {
-            &.actions {         
+            &.actions {
                 grid-column: span 2;
                 justify-self: flex-end;
             }
         }
     }
 
-    
+
 }
 
 .serviceGrid {
@@ -471,13 +688,13 @@ if(!service.value.hasOwnProperty('storage')) {
                 margin-bottom: 28px;
                 font-size: 20px;
 
-                span {        
-                    margin-left: 8px;    
+                span {
+                    margin-left: 8px;
                     vertical-align: middle;
                 }
             }
 
-            .body {    
+            .body {
                 color: rgba(255, 255, 255, 0.85);
                 line-height: 1.5;
             }
@@ -491,6 +708,7 @@ if(!service.value.hasOwnProperty('storage')) {
             text-decoration: none;
         }
     }
+
     a.serviceGridItem {
         text-align: left;
         color: rgba(255, 255, 255, 0.85);
@@ -499,10 +717,12 @@ if(!service.value.hasOwnProperty('storage')) {
     }
 
 }
+
 sui-tooltip {
     margin-top: -7px;
     margin-left: 8px;
 }
+
 .indicator {
     position: relative;
     display: inline-block;
@@ -514,9 +734,94 @@ sui-tooltip {
     border: 0.3px solid #595959;
     box-shadow: inset -1px -1px 2px rgba(0, 0, 0, 0.25), inset 1px 1px 2px rgba(255, 255, 255, 0.65);
     margin-right: 8px;
-    
+
     &.active {
         background: #5AD858;
     }
+}
+
+.domainGrid {
+    &.deleting {
+        text-align: center;
+        color:rgba(255,255,255,0.4);
+        padding-bottom: 30px;
+
+        h3 {
+            font-size:28px;
+            font-weight:500;
+            margin: 0 0 20px 0;
+        }
+        span {
+            font-size: 14px;
+        }
+    }
+    &Item {
+        position: relative;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 24px;
+        border-radius: 8px;
+
+        .name {
+            font-size: 14px;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .value {
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.85);
+            word-break: break-all;
+        }
+
+        a {
+            position: absolute;
+            top: 50%;
+            right: 24px;
+            transform: translateY(-50%);
+            color: #fff;
+        }
+    }
+    .manageFiles {
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 8px 16px;
+        border-radius: 8px;
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+    }
+}
+.noFiles {
+    // background: #656565;
+    padding: 12px 16px;
+    text-align: center;
+    border-radius: 8px;
+
+    .title {
+        font-size: 28px;
+    }
+
+    .title,
+    p {
+        opacity: .4;
+    }
+}
+.folder {
+    border-radius: 12px; margin-top: 8px; padding: 8px 12px; background: #656565;
+}
+.file {
+    margin-top: 8px; padding: 8px 12px;
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: rtl;
+    text-align: left;
 }
 </style>

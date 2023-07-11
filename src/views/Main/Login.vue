@@ -14,7 +14,7 @@ form.container.login(@submit.prevent="login" action="" :loading="promiseRunning 
             required)
     .input
         label Password
-        PasswordInput(@input="e=>form.password = e.target.value" :value='form.password' @change="validatePassword" placeholder="Enter password" :required="true" autocomplete="current-password")
+        PasswordInput(@input="e=> { form.password = e.target.value; e.target.setCustomValidity(''); }" :value='form.password' @change="validatePassword" placeholder="Enter password" :required="true" autocomplete="current-password")
     .action
         label
             sui-input(type="checkbox" 

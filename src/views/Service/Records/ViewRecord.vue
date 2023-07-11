@@ -83,7 +83,7 @@ NavBarProxy
 												div(v-if="file.size" style="font-size: 12px;") {{ getSize(file.size) }}
 											Icon download
 									template(v-else)
-										a.value.file(v-for="file in record.files" @click="download(file.url, file?.filename)" style="text-decoration: none;color: unset; cursor: pointer;")
+										a.value.file(v-for="file in record.files" @click="download(file.url)" style="text-decoration: none;color: unset; cursor: pointer;")
 											Icon attached
 											span
 												.filename {{ file.filename }}
@@ -248,7 +248,6 @@ NavBarProxy
 							input(hidden :file-key="record.key" type="file" @change="e=>addFiles(e, recordIndex, index)" multiple :disabled="isSaving")
 							div
 								Icon attached
-								span.hideOnTablet(style="margin-right: 6px;") Drag and Drop OR
 								sui-button.lineButton(@click.prevent.stop="" type="button") Upload
 							.error(v-if="fileError === record.key && record.key !== ''" style="display: block; text-align: center;") 
 								Icon warning
@@ -774,23 +773,8 @@ const save = async () => {
 	};
 };
 
-const download = async (secureUrl, fileName) => {
-	try {
-		let download = await skapi.getBlob({ url: secureUrl }, { service: serviceId });
-		let reader = new FileReader();
-		reader.readAsDataURL(download);
-		reader.onload = () => {
-			const file = reader.result;
-			let a = document.createElement('a');
-			a.href = file;
-			a.download = fileName;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-		}
-	} catch (e) {
-		console.log({ e });
-	}
+const download = async (secureUrl) => {
+	skapi.getFile(secureUrl, { dataType: 'download' });
 }
 
 const onDrop = (event, keyIndex) => {
