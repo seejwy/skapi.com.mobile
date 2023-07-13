@@ -130,7 +130,6 @@ const uploadFiles = async () => {
     if (filesToUpload.value <= 0) return false;
 
     let directoryArray = props.currentDirectory.slice(0, -1).split('/');
-    console.log(directoryArray);
 
     function saveToServiceFiles(file) {
         let fileArray = file.name.split('/');
@@ -270,7 +269,7 @@ appStyle.background = '#333333';
         }
 
         &.withIcon {
-            padding: 8px 8px;
+            padding: 7px 8px;
         }
     }
 }

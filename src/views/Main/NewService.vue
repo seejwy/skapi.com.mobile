@@ -104,7 +104,6 @@ const createNewService = async() => {
     state.blockingPromise = skapi.createService({region: serviceLocale, name: serviceName.value});
     let res = await state.blockingPromise;
     isDisabled.value = false;
-    console.log(state)
     router.push(`/admin/${res.service}`);
 }
 

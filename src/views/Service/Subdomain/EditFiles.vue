@@ -27,13 +27,13 @@ template(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon folder2
-                            .path-wrapper.that(@click="goto(currentDirectory+=name)")
+                            .path-wrapper(@click="goto(currentDirectory+=name)")
                                 span.path {{ name }}             
                     .fileWrapper(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon file
-                            a(:href="file.url" download="test").path-wrapper.momo
+                            a(:href="file.url" download).path-wrapper
                                 span.path {{ name }}
             template(v-else)
                 div.noFiles
@@ -222,10 +222,8 @@ const getDirectory = (directory) => {
             } else {
                 let name = extractFileName(file.name);
                 let subdomain = service.value.subdomain;
-                console.log(currentDirectory.value)
                 let url = `https://${subdomain}.skapi.com${currentDirectory.value}${name}`;
 
-                console.log({url});
                 if (directory) {
                     let currentDirectory = service.value;
                     for (let i = 1; i < directory.length; i++) {
@@ -286,7 +284,7 @@ onBeforeUnmount(() => {
         }
 
         &.withIcon {
-            padding: 8px 8px;
+            padding: 7px 8px;
         }
     }
 }

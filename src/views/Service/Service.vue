@@ -283,9 +283,6 @@ const uploadFiles = () => {
     for (let key in fileList) {
         formData.append(key, fileList[key], key);
     }
-    for (const pair of formData.entries()) {
-        console.log(`${pair[0]}, ${pair[1]}`);
-    }
 }
 
 const edit = () => {
@@ -338,7 +335,6 @@ const onDrop = (event) => {
 
     for (let item of items) {
         let content = item.webkitGetAsEntry();
-        console.log(content)
         if (content.isDirectory) {
             readEntriesAsync(content);
         } else {
@@ -381,8 +377,6 @@ const deleteSubdomain = async () => {
         isDisabled.value = false;
         return;
     }
-
-    console.log("This is caleld omgs")
 
     try {
         await skapi.registerSubdomain({
