@@ -31,7 +31,6 @@ NavBarProxy
             div.noFiles
                 div.title No Files
                 p You have not uploaded any files
-        pre {{ service.files }}
 </template>
 <!-- script below -->
 <script setup>
