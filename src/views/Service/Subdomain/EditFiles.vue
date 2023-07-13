@@ -15,26 +15,29 @@ template(v-else)
         .directoryName
             Icon(@click="goUpDirectory") upload
             .path-wrapper
+                div {{ currentDirectoryArray }}
                 span.path(v-for="(folder, index) in currentDirectoryArray" @click="jumpto(currentDirectoryArray.length - index)")
                     span {{ folder }}/
                 span /
-        .filesContainer
+        .filesContainer        
+            div {{ service.files }}
+            pre {{ service.subdomain}} {{ currentDirectory }}
             .fetching(v-if="isFetching")
                 Icon.animationRotation refresh
-            template(v-else-if="Object.keys(service?.files?.list).length")
-                template(v-for="(file, name) in directoryFiles")
-                    .fileWrapper(v-if="file.type === 'folder'")
+            template(v-else-if="Object.keys(service?.files).length")
+                template(v-for="(file) in service?.files[service.subdomain+currentDirectory]")
+                    .fileWrapper(v-if="!file.file")
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon folder2
-                            .path-wrapper(@click="goto(currentDirectory+=name)")
-                                span.path {{ name }}             
+                            .path-wrapper(@click="getDirectory(currentDirectory+=file.name)")
+                                span.path {{ file.name }}             
                     .fileWrapper(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon file
                             a(:href="file.url" download).path-wrapper
-                                span.path {{ name }}
+                                span.path {{ file.name }}
             template(v-else)
                 div.noFiles
                     div.title No Files
@@ -69,15 +72,8 @@ const currentDirectoryArray = computed(() => {
     });
 })
 
-const goto = (name) => {
-    currentDirectory.value = name;
-    getDirectory(name.slice(0, -1).split('/'));
-}
-
 const jumpto = (index) => {
-    let localCurrentDirectory = currentDirectory.value;
-    let directory = [...localCurrentDirectory.split('/').filter((path) => path)];
-    goto(`/${directory.slice(0, index).join('/')}/`);
+    getDirectory(`/${currentDirectoryArray.value.slice(index * -1).reverse().join('/')}/`);
 }
 
 const directoryFiles = ref({});
@@ -128,130 +124,61 @@ const deleteFiles = () => {
 }
 
 const goUpDirectory = () => {
-    if (currentDirectory.value !== '/') {
-        let directory = currentDirectory.value.slice(0, -1).split('/');
-        directory.splice(-1);
-        getDirectory(directory);
-        currentDirectory.value = `${directory.join('/')}/`;
+    let directoryArray = [...currentDirectoryArray.value];
+    directoryArray.reverse();
+    directoryArray.pop();
+    let newDirectory = `/${directoryArray.join('/')}/`;
+
+    currentDirectory.value = newDirectory;
+
+    if(directoryArray.length) {
+        getDirectory(newDirectory);
     } else {
         getDirectory();
     }
 }
 
 const getDirectory = (directory) => {
-    if (!directory && service.value.hasOwnProperty('files')) {
-        directoryFiles.value = service.value.files.list;
-        return true;
+    console.log({directory: service.value.subdomain + directory});
+    console.log(service.value.files)
+    if(service.value.files?.[service.value.subdomain + directory]) {
+        return service.value.files[service.value.subdomain + directory];
     }
-
-    function getCurrentDirectoryFiles(directory) {
-        let directoryFiles = service.value.files.list;
-        if (directory) {
-            for (let i = 1; i < directory.length; i++) {
-                directoryFiles = directoryFiles[`${directory[i]}/`].files.list;
-            }
-        }
-        return directoryFiles
-    }
-
-    if (service.value?.files) {
-        let directoryCheck = service.value.files.list;
-        for (let i = 1; i < directory.length; i++) {
-            directoryCheck = Object.keys(directoryCheck?.[`${directory[i]}/`]?.files.list).length ? directoryCheck?.[`${directory[i]}/`]?.files.list : null;
-        }
-        if (!directoryCheck) {
-            directoryFiles.value = {};
-        } else {
-            directoryFiles.value = getCurrentDirectoryFiles(directory);
-            return true;
-        }
-    }
-
-    directoryFiles.value = {};
 
     let params = {
         service: service.value.service
     }
 
     if (directory) {
-        params.dir = `${directory.join('/')}/`;
+        params.dir = directory;
     }
 
     isFetching.value = true;
 
     skapi.listHostDirectory(params).then((files) => {
         if (!service.value.hasOwnProperty('files')) {
-            service.value.files = {
-                endOfList: files.endOfList,
-                list: {}
-            }
+            service.value.files = {}
+        }
+        if (!service.value.files[`${service.value.subdomain}${currentDirectory.value}`]) {
+            service.value.files[`${service.value.subdomain}${currentDirectory.value}`] = [];     
         }
 
-        for (let file of files.list) {
-            if (file.type === 'folder') {
-                let dir = file.name.substring(file.name.indexOf("/") + 1);
+        files.list.forEach((file) => {
+            let filename = extractFileName(file.name);
 
-                if (directory) {
-                    let currentDirectory = service.value;
-                    for (let i = 1; i < directory.length; i++) {
-                        currentDirectory = currentDirectory.files.list[`${directory[i]}/`]
-                    }
-                    let folderName = dir.slice(0, -1).split('/');
-
-                    currentDirectory.files.endOfList = files.endOfList;
-                    currentDirectory.files.list[`${folderName[folderName.length - 1]}/`] = {
-                        type: 'folder',
-                        name: `${folderName[folderName.length - 1]}/`,
-                        files: {
-                            endOfList: false,
-                            list: {}
-                        }
-                    };
-                    directoryFiles.value = currentDirectory.files.list;
-                } else {
-                    service.value.files.list[dir] = {
-                        type: 'folder',
-                        name: dir,
-                        files: {
-                            endOfList: false,
-                            list: {}
-                        }
-                    }
-                    directoryFiles.value = service.value.files.list
-                }
+            if(file.type === 'folder') {
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].push({
+                    name: filename
+                }) 
             } else {
-                let name = extractFileName(file.name);
-                let subdomain = service.value.subdomain;
-                let url = `https://${subdomain}.skapi.com${currentDirectory.value}${name}`;
-
-                if (directory) {
-                    let currentDirectory = service.value;
-                    for (let i = 1; i < directory.length; i++) {
-                        currentDirectory = currentDirectory.files.list[`${directory[i]}/`]
-                    }
-
-                    currentDirectory.files.endOfList = files.endOfList;
-                    let nameArr = name.split('/');
-                    let fileName = nameArr[nameArr.length - 1]
-
-                    currentDirectory.files.list[fileName] = {
-                        type: 'file',
-                        name: name,
-                        url,
-
-                    };
-                    directoryFiles.value = currentDirectory.files.list;
-                } else {
-                    service.value.files.list[name] = {
-                        type: 'file',
-                        name: name,
-                        url,
-                    };
-
-                    directoryFiles.value = service.value.files.list;
-                }
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].push({
+                    file,
+                    url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
+                    name: filename
+                }) 
             }
-        }
+        })
+
 
         isFetching.value = false;
     });
