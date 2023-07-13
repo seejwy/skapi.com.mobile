@@ -19,7 +19,7 @@ NavBarProxy
     .directory 
         span {{ currentDirectory }}
     .filesContainer
-        template(v-if="Object.keys(fileList)?.length")
+        template(v-if="Object.keys(fileList).length")
             label.file(v-for="(file, path) in fileList")
                 sui-input(v-if="!isSaving && !isComplete" type="checkbox" :value="path" :disabled="isSaving" :checked="selectedFiles.includes(path)" @change="selectionHandler")
                 .progressBar(v-else @click="()=>abortUpload=path" :class="{'started': file.progress !== 100 && file.currentProgress > 0 && file.currentProgress < 100, 'complete': file.currentProgress === 100, 'failed': file.progress === false}" :style="{'--progress': 'conic-gradient(#5AD858 ' + (file.currentProgress ? file.currentProgress * 3.6 : 0) + 'deg, rgba(255,255,255,.1) 0deg)'}")
@@ -31,11 +31,13 @@ NavBarProxy
             div.noFiles
                 div.title No Files
                 p You have not uploaded any files
+        pre {{ service.files }}
 </template>
 <!-- script below -->
 <script setup>
 import { inject, ref, reactive, onBeforeUnmount } from 'vue';
 import { state, skapi } from '@/main';
+import { extractFileName } from '@/helper/files';
 import { useRouter } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
@@ -74,7 +76,7 @@ const addFolders = (event) => {
     const files = event.target.files;
 
     for (let file of files) {
-        let folderName = props.currentDirectory + file.webkitRelativePath;
+        let folderName = props.currentDirectory.slice(1) + file.webkitRelativePath;
         fileList.value[folderName] = {
             file,
             progress: 0
@@ -91,10 +93,12 @@ const addFiles = (event) => {
         filesToUpload.value = 0;
         isComplete.value = false;
     }
+
     const files = event.target.files;
 
     for (let file of files) {
-        let fileName = props.currentDirectory + file.name;
+        let fileName = props.currentDirectory.slice(1) + file.name;
+
         fileList.value[fileName] = {
             file,
             progress: 0
@@ -127,32 +131,36 @@ const uploadFiles = async () => {
     if (filesToUpload.value <= 0) return false;
 
     let directoryArray = props.currentDirectory.slice(0, -1).split('/');
+    console.log(directoryArray);
 
     function saveToServiceFiles(file) {
         let fileArray = file.name.split('/');
-
-        // console.log(props.currentDirectory, file)
-        // console.log(service.value.files)
-
         let serviceFolder = service.value.files.list;
 
         for(let i = 0; i < fileArray.length - 1; i++) {
-            if(fileArray[i]) {
-                serviceFolder = serviceFolder[fileArray[i] + '/'].files.list;
+            if(!serviceFolder[fileArray[i] + '/']) {
+                serviceFolder[fileArray[i] + '/'] = {
+                    type: 'folder',
+                    files: {
+                        endOfList: false,
+                        list: {}
+                    }
+                }
             }
+
+            serviceFolder = serviceFolder[fileArray[i] + '/'].files.list;
         }
-        serviceFolder[fileArray[fileArray.length - 1]] = {
+        let fileName = extractFileName(file.name)
+        serviceFolder[fileName] = {
             type: "file",
-            name: "file.name",
-            url: `https://${service.value.subdomain}.skapi.com${file.name}`
+            name: fileName,
+            url: `https://${service.value.subdomain}.skapi.com/${fileName}`
         };
-        // console.log(serviceFolder);
     }
 
     let formData = new FormData();
 
     for (let key in fileList.value) {
-        console.log(key, fileList.value[key].file)
         formData.append(key, fileList.value[key].file, key);
     }
     isSaving.value = true;
@@ -178,28 +186,28 @@ const uploadFiles = async () => {
                     fileList.value[e.currentFile.name].abort = e.abort;
                     fileList.value[e.currentFile.name].progress = e.progress;
                     if (!fileList.value[e.currentFile.name].currentProgress) fileList.value[e.currentFile.name].currentProgress = 0;
-                    // if(!interval) {
-                    //     interval = setInterval(() => {
-                    //         testTimer++;
-                    //         try {
+                    if(!interval) {
+                        interval = setInterval(() => {
+                            testTimer++;
+                            try {
 
-                    //             if (fileList.value[e.currentFile.name].currentProgress < progress) {
-                    //                 fileList.value[e.currentFile.name].currentProgress += 1;
-                    //             }
+                                if (fileList.value[e.currentFile.name].currentProgress < progress) {
+                                    fileList.value[e.currentFile.name].currentProgress += 1;
+                                }
 
-                    //             if (fileList.value[e.currentFile.name].currentProgress === progress) {
-                    //                 filesToUpload.value--;
-                    //                 service.value.files[e.currentFile.name] = `https://${service.value.subdomain}.skapi.com/${e.currentFile.name}`
-                    //                 saveToServiceFiles(e.currentFile);
-                    //                 clearInterval(interval);
-                    //                 interval = null;
-                    //             }
-                    //         } catch(e) {
-                    //             throw e;
-                    //             clearInterval(interval);
-                    //         }
-                    //     }, 5);
-                    // }
+                                if (fileList.value[e.currentFile.name].currentProgress === progress) {
+                                    filesToUpload.value--;
+                                    // service.value.files[e.currentFile.name] = `https://${service.value.subdomain}.skapi.com/${e.currentFile.name}`
+                                    saveToServiceFiles(e.currentFile);
+                                    clearInterval(interval);
+                                    interval = null;
+                                }
+                            } catch(e) {
+                                throw e;
+                                clearInterval(interval);
+                            }
+                        }, 5);
+                    }
                 }
             }
         });

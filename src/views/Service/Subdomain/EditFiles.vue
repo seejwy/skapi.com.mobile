@@ -25,25 +25,28 @@ template(v-else)
                 template(v-for="(file, name) in directoryFiles")
                     .fileWrapper(v-if="file.type === 'folder'")
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
-                            sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="currentDirectory.slice(1) + file.name")
+                            sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon folder2
-                            .path-wrapper(@click="goto(currentDirectory+=name)")
-                                span.path {{ name }}                                
+                            .path-wrapper.that(@click="goto(currentDirectory+=name)")
+                                span.path {{ name }}             
                     .fileWrapper(v-else)
-                        .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + '/' + file.name)}")
-                            sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + '/' + file.name) || null" @change="checkboxHandler" :value="file.name")
+                        .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
+                            sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon file
-                            a(:href="file.url" download).path-wrapper
+                            a(:href="file.url" download="test").path-wrapper.momo
                                 span.path {{ name }}
             template(v-else)
                 div.noFiles
                     div.title No Files
                     p You have not uploaded any files
+            
+            pre {{ service.files }}
 </template>
 <!-- script below -->
 <script setup>
 import { inject, ref, reactive, onBeforeUnmount, computed } from 'vue';
 import { state, skapi } from '@/main';
+import { extractFileName } from '@/helper/files';
 import { useRouter } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
@@ -83,7 +86,7 @@ const directoryFiles = ref({});
 
 const checkboxHandler = (e) => {
     if (e.target.checked) {
-        selectedFiles.value.push(`${service.value.subdomain}/${e.target.value}`);
+        selectedFiles.value.push(`${service.value.subdomain}${currentDirectory.value}${e.target.value}`);
     } else {
         selectedFiles.value.splice(selectedFiles.value.indexOf(`${service.value.subdomain}/${e.target.value}`), 1);
     }
@@ -96,26 +99,24 @@ const deleteFiles = () => {
         service: service.value.service
     }).then((res) => {
         selectedFiles.value.forEach(path => {
-            console.log({ path })
             let dir = service.value.files.list;
             let previousDir = service.value.files.list;
             let newPathArr = path.split('/');
+
             if (!newPathArr[newPathArr.length - 1]) {
                 newPathArr.pop();
                 newPathArr[newPathArr.length - 1] = newPathArr[newPathArr.length - 1] + '/';
             }
+
             for (let i = 1; i < newPathArr.length - 1; i++) {
                 if (i > 1) {
                     previousDir = previousDir[newPathArr[i - 1] + '/'].files.list;
                 }
                 dir = dir[newPathArr[i] + '/'].files.list;
             }
-            if (!dir[newPathArr[newPathArr.length - 1]]) {
-                console.log(newPathArr, dir, dir[newPathArr[newPathArr.length - 1]])
-            }
-            console.log(newPathArr, dir, dir[newPathArr[newPathArr.length - 1]])
-            console.log(newPathArr[newPathArr.length - 1])
+            
             delete dir[newPathArr[newPathArr.length - 1]];
+
             if (Object.keys(dir).length === 0) {
                 goUpDirectory();
                 dir = service.value.files.list;
@@ -125,6 +126,7 @@ const deleteFiles = () => {
         isDeleting.value = false;
         selectedFiles.value = [];
     });
+    
 }
 
 const goUpDirectory = () => {
@@ -220,10 +222,12 @@ const getDirectory = (directory) => {
                     directoryFiles.value = service.value.files.list
                 }
             } else {
-                let name = file.name.substring(file.name.indexOf("/") + 1);
-                let subdomain = file.name.substring(0, file.name.indexOf("/"));
-                let url = `https://${subdomain}.skapi.com/${name}`
+                let name = extractFileName(file.name);
+                let subdomain = service.value.subdomain;
+                console.log(currentDirectory.value)
+                let url = `https://${subdomain}.skapi.com${currentDirectory.value}${name}`;
 
+                console.log({url});
                 if (directory) {
                     let currentDirectory = service.value;
                     for (let i = 1; i < directory.length; i++) {
@@ -242,15 +246,13 @@ const getDirectory = (directory) => {
                     };
                     directoryFiles.value = currentDirectory.files.list;
                 } else {
-                    let nameArr = name.split('/');
-                    let fileName = nameArr[nameArr.length - 1]
-
-                    service.value.files.list[fileName] = {
+                    service.value.files.list[name] = {
                         type: 'file',
                         name: name,
                         url,
-
                     };
+
+                    directoryFiles.value = service.value.files.list;
                 }
             }
         }

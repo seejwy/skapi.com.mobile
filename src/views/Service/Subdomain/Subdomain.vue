@@ -34,12 +34,15 @@ if(service.value.subdomain) {
 
 const saveSubdomain = () => {
     isSaving.value = true;
+    errorMessage.value = '';
+
     skapi.registerSubdomain({
         subdomain: subdomain.value,
         exec: 'register',
         service: service.value.service
     }).then((res) => {
         skapi.getServices(service.value.service).then((res) => {
+            isSaving.value = false;
             state.services = res;
             service.value = res[service.value.region].find(serv => serv.service === service.value.service);
 
@@ -48,8 +51,6 @@ const saveSubdomain = () => {
     }).catch((e) => {
         console.log({e});
         errorMessage.value = 'This subdomain has already been taken.';
-
-    }).finally(() => {
         isSaving.value = false;
     });
 }
@@ -80,7 +81,13 @@ onBeforeUnmount(() => {
     }
 
     .error {
+        margin-top: 4px;
+        text-align: left;
         color: #f04e4e;
+    }
+
+    & *:nth-last-child(2) {
+        margin-bottom: 40px;
     }
 }
 </style>

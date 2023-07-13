@@ -77,7 +77,7 @@ template(v-else)
                             span Email System
                         .body Users are data that your service user's will store and read from your service database. 
                     .goto Go to Mail >
-    .container 
+    .container
         .titleActionsWrapper
             .titleWrapper
                 Icon domain
@@ -88,7 +88,7 @@ template(v-else)
         .innerContainer
             .domainGrid(v-if="!service.subdomain")
                 div No Domain Created
-            .domainGrid(v-else-if="service?.subdomain?.substring(0,1) !== '*'")
+            .domainGrid(v-else-if="!isDeleting")
                 .domainGridItem
                     .name
                         span Subdomain
@@ -96,17 +96,15 @@ template(v-else)
                         span {{ service.subdomain }}.skapi.com
                     a(:href="`https://${service.subdomain}.skapi.com`" target="_blank")
                         Icon link
-                    //- a(:href="`https://www.google.com`" target="_blank")
-                    //-     Icon link
                 .manageFiles(@click="editFiles") 
                     span Manage Files
                     Icon right
-                
-                .manageFiles(@click="() => skapi.refreshCDN({service: service.service, subdomain: service.subdomain})") 
-                    span Refresh CDN
-                    Icon refresh
 
-                
+                .manageFiles(@click="refreshCDN") 
+                    span Refresh CDN
+                    Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
+
+
             .domainGrid.deleting(v-else) 
                 h3 Deleting subdomain ...
                 span It may take a few minutes for a subdomain to be deleted.
@@ -170,6 +168,7 @@ const deleteErrorMessage = ref('');
 const isEdit = ref(false);
 const isDisabled = ref(false);
 const isDeleting = ref(false);
+const isCDNRefreshing = ref(false);
 
 const fileList = reactive({});
 const fileUpload = ref(null);
@@ -250,6 +249,19 @@ const settingGrid = reactive([
     },
 ]);
 
+const refreshCDN = () => { 
+    if(!isCDNRefreshing.value) {
+        isCDNRefreshing.value = true; 
+        skapi.refreshCDN({
+            service: service.value.service,
+            subdomain: service.value.subdomain
+        }).catch((e) => {
+            console.log({e});
+        }).finally(()=> {
+            isCDNRefreshing.value = false
+        }); 
+    }
+}
 const addFileButtonHandler = () => {
     const parent = fileUpload.value.click();
 }
@@ -359,7 +371,7 @@ const deleteService = () => {
     });
 }
 
-const deleteSubdomain = async() => {
+const deleteSubdomain = async () => {
     isDisabled.value = true;
     if (confirmationCode.value !== service.value.subdomain) {
         confirmationCode.value = '';
@@ -370,27 +382,50 @@ const deleteSubdomain = async() => {
         return;
     }
 
+    console.log("This is caleld omgs")
+
     try {
         await skapi.registerSubdomain({
             service: service.value.service,
             subdomain: service.value.subdomain,
             exec: 'remove'
         }).then(() => {
+            isDeleting.value = true;
+            isDisabled.value = true;
+
             skapi.getServices(service.value.service).then((res) => {
                 state.services = res;
                 service.value = res[service.value.region].find(serv => serv.service === service.value.service);
-            })
-            if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
-            if(service.value.subdomain) {
-                if(service.value.subdomain.includes('*')) {
-                    isDeleting.value = true;
-                    isDisabled.value = false;
+
+                if (service.value.subdomain && service.value.subdomain.includes('*')) {
+                    let time = 2000;
+
+                    let interval = setInterval(() => {
+                        skapi.getServices(service.value.service).then((res) => {
+                            state.services = res;
+                            service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+                            if (service.value.subdomain) {
+                                if (service.value.subdomain.includes('*')) {
+                                    isDeleting.value = true;
+                                    isDisabled.value = false;
+                                    time *= 2;
+                                } else {
+                                    isDeleting.value = false;
+                                    isDisabled.value = false;
+                                    clearInterval(interval);
+                                }
+                            }
+                        })
+                    }, time);
                 } else {
                     isDeleting.value = false;
+                    isDisabled.value = false;
                 }
-            }
+            });
+
+            if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
         })
-    } catch(e) {
+    } catch (e) {
         deleteErrorMessage.value = e.message;
         if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
         deleteErrorOverlay.value.open();
@@ -749,18 +784,20 @@ sui-tooltip {
 .domainGrid {
     &.deleting {
         text-align: center;
-        color:rgba(255,255,255,0.4);
+        color: rgba(255, 255, 255, 0.4);
         padding-bottom: 30px;
 
         h3 {
-            font-size:28px;
-            font-weight:500;
+            font-size: 28px;
+            font-weight: 500;
             margin: 0 0 20px 0;
         }
+
         span {
             font-size: 14px;
         }
     }
+
     &Item {
         position: relative;
         width: 100%;
@@ -789,6 +826,7 @@ sui-tooltip {
             color: #fff;
         }
     }
+
     .manageFiles {
         width: 100%;
         background-color: rgba(255, 255, 255, 0.1);
@@ -801,6 +839,7 @@ sui-tooltip {
         cursor: pointer;
     }
 }
+
 .noFiles {
     // background: #656565;
     padding: 12px 16px;
@@ -816,11 +855,17 @@ sui-tooltip {
         opacity: .4;
     }
 }
+
 .folder {
-    border-radius: 12px; margin-top: 8px; padding: 8px 12px; background: #656565;
+    border-radius: 12px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #656565;
 }
+
 .file {
-    margin-top: 8px; padding: 8px 12px;
+    margin-top: 8px;
+    padding: 8px 12px;
     display: block;
     color: #fff;
     text-decoration: none;
@@ -829,5 +874,4 @@ sui-tooltip {
     text-overflow: ellipsis;
     direction: rtl;
     text-align: left;
-}
-</style>
+}</style>
