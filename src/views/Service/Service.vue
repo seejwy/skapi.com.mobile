@@ -96,13 +96,13 @@ template(v-else)
                         span {{ service.subdomain }}.skapi.com
                     a(:href="`https://${service.subdomain}.skapi.com`" target="_blank")
                         Icon link
-                .manageFiles(@click="editFiles") 
-                    span Manage Files
-                    Icon right
+                .actions(@click="editFiles") 
+                    Icon file
+                    div Manage Files
 
-                .manageFiles(@click="refreshCDN") 
-                    span Refresh CDN
+                .actions(@click="refreshCDN") 
                     Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
+                    div Refresh CDN
 
 
             .domainGrid.deleting(v-else) 
@@ -827,16 +827,30 @@ sui-tooltip {
         }
     }
 
-    .manageFiles {
-        width: 100%;
+    .actions {
+        width: calc(50% - 8px);
         background-color: rgba(255, 255, 255, 0.1);
-        padding: 8px 16px;
+        text-align: center;
+        padding: 24px;
         border-radius: 8px;
         margin-top: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: inline-block;
+        vertical-align: middle;
         cursor: pointer;
+
+        svg {
+            width: 30px;
+            height: 30px;
+            margin-bottom: 20px;
+        }
+
+        div {
+            height: 2em;
+        }
+
+        &:not(:last-child) {        
+            margin-right: 16px;
+        }
     }
 }
 
