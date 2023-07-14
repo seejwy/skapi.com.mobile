@@ -129,31 +129,64 @@ let abortUpload = '';
 const uploadFiles = async () => {
     if (filesToUpload.value <= 0) return false;
 
-    let directoryArray = props.currentDirectory.slice(0, -1).split('/');
-
     function saveToServiceFiles(file) {
-        let fileArray = file.name.split('/');
-        let serviceFolder = service.value.files.list;
+        function binarySearch(fileName) {
+            let low = 0;
+            directory.list.forEach((file) => {
+                if(file.type === 'folder') low++;
+            });
+            let high = directory.list.length - 1;
+            let mid = Math.floor((low + high) / 2);
+            let name = directory.list[mid].name;
 
-        for(let i = 0; i < fileArray.length - 1; i++) {
-            if(!serviceFolder[fileArray[i] + '/']) {
-                serviceFolder[fileArray[i] + '/'] = {
-                    type: 'folder',
-                    files: {
-                        endOfList: false,
-                        list: {}
-                    }
+            while (low <= high) {
+                mid = Math.floor((low + high) / 2);
+                name = directory.list[mid].name;
+
+                if (name < fileName && name[name.length - 1] !== '/') {
+                    low = mid + 1;
+                } else if (name > fileName && name[name.length - 1] !== '/') {
+                    high = mid - 1;
+                } else {
+                    return mid;
                 }
             }
 
-            serviceFolder = serviceFolder[fileArray[i] + '/'].files.list;
+
+            if (fileName > name) {
+                return mid + 1;
+            } else if (fileName < name) {
+                return mid;
+            }
         }
-        let fileName = extractFileName(file.name)
-        serviceFolder[fileName] = {
-            type: "file",
+
+        let fileName = extractFileName(file.name);
+        let fileObj = {
             name: fileName,
-            url: `https://${service.value.subdomain}.skapi.com/${fileName}`
-        };
+            type: 'file',
+            file: file
+        }
+
+        let directory = service.value.files[service.value.subdomain + props.currentDirectory];
+        if (!directory.endOfList) {
+            let index = binarySearch(fileName);
+            if (directory.list[index]?.name === fileObj.name) {
+                directory.list[index] = fileObj;
+            } else {
+                directory.list.splice(index, 0, fileObj);
+            }
+        } else {
+            let index = binarySearch(fileName);
+            if(index < directory.list.length) {
+                if (directory.list[index]?.name === fileObj.name) {
+                    directory.list[index] = fileObj;
+                } else {
+                    directory.list.splice(index, 0, fileObj);
+                }
+            } else if(directory.list[index]?.name === fileObj.name) {
+                directory.list[index] = fileObj;
+            }
+        }
     }
 
     let formData = new FormData();
@@ -184,7 +217,7 @@ const uploadFiles = async () => {
                     fileList.value[e.currentFile.name].abort = e.abort;
                     fileList.value[e.currentFile.name].progress = e.progress;
                     if (!fileList.value[e.currentFile.name].currentProgress) fileList.value[e.currentFile.name].currentProgress = 0;
-                    if(!interval) {
+                    if (!interval) {
                         interval = setInterval(() => {
                             testTimer++;
                             try {
@@ -200,7 +233,7 @@ const uploadFiles = async () => {
                                     clearInterval(interval);
                                     interval = null;
                                 }
-                            } catch(e) {
+                            } catch (e) {
                                 throw e;
                                 clearInterval(interval);
                             }
