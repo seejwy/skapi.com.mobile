@@ -132,19 +132,36 @@ const uploadFiles = async () => {
     function saveToServiceFiles(file) {
         function binarySearch(fileObj) {
             let low = 0;
-            directory.list.forEach((file) => {
-                if(file.type === 'folder' && fileObj.type === 'file') low++;
-            });
-            let high = directory.list.length - 1;
+            let high, name;
+            if(fileObj.type === 'folder') {
+                console.log("This is a folder")
+                // directory.folders.forEach((file) => {
+                //     if(file.type === 'folder' && fileObj.type === 'file') low++;
+                // });
+                high = directory.folders.length - 1;
+            } else {
+                high = directory.files.length - 1;
+            }
+            
             let mid = Math.floor((low + high) / 2);
-            let name = directory.list[mid]?.name;
+
+            if(fileObj.type === 'folder') {
+                name = directory.folders[mid]?.name;
+            } else {
+                name = directory.files[mid]?.name;
+            }
+
             if(!name) {
                 return 0;
             }
 
             while (low <= high) {
                 mid = Math.floor((low + high) / 2);
-                name = directory.list[mid].name;
+                if(fileObj.type === 'folder') {
+                    name = directory.folders[mid]?.name;
+                } else {
+                    name = directory.files[mid]?.name;
+                }
 
                 if (name < fileObj.name && name[name.length - 1] !== '/') {
                     low = mid + 1;
@@ -177,11 +194,12 @@ const uploadFiles = async () => {
             fileDirectoryTree += '/';
         }
         let directory = service.value.files[service.value.subdomain + fileDirectoryTree];
-        console.log({files:service.value.files, directory: service.value.subdomain + fileDirectoryTree});
+
         if(!directory) {
             directory = service.value.files[service.value.subdomain + fileDirectoryTree] = {
                 endOfList: false,
-                list: []
+                folders: [],
+                files: []
             }
 
             let folderToCreate = service.value.subdomain + fileDirectoryTree;
@@ -196,35 +214,36 @@ const uploadFiles = async () => {
                 
                 let index = binarySearch(folderObj);
                 console.log({index});
-                let searchResult = service.value.files[service.value.subdomain + props.currentDirectory].list.find((item) => item.name === folderObj.name)
+                let searchResult = service.value.files[service.value.subdomain + props.currentDirectory].folders.find((item) => item.name === folderObj.name)
                 
                 if (!searchResult) {
-                    service.value.files[service.value.subdomain + props.currentDirectory].list.splice(index, 0, folderObj);
+                    service.value.files[service.value.subdomain + props.currentDirectory].folders.splice(index, 0, folderObj);
                 }
             }
             return false;
         }
-
+        console.log(directory, directory.endOfList + 'endoflist')
         if (directory.endOfList) {
+            console.log({fileObj})
             let index = binarySearch(fileObj);
-            if (directory.list[index]?.name === fileObj.name) {
-                directory.list[index] = fileObj;
+            if (directory.files[index]?.name === fileObj.name) {
+                directory.files[index] = fileObj;
             } else {
-                if(directory.list[index].type === 'folder') {
+                if(directory.files[index].type === 'folder') {
                     index++;
                 }
-                directory.list.splice(index, 0, fileObj);
+                directory.files.splice(index, 0, fileObj);
             }
         } else {
             let index = binarySearch(fileObj);
-            if(index < directory.list.length) {
-                if (directory.list[index]?.name === fileObj.name) {
-                    directory.list[index] = fileObj;
+            if(index < directory.files.length) {
+                if (directory.files[index]?.name === fileObj.name) {
+                    directory.files[index] = fileObj;
                 } else {
-                    directory.list.splice(index, 0, fileObj);
+                    directory.files.splice(index, 0, fileObj);
                 }
-            } else if(directory.list[index]?.name === fileObj.name) {
-                directory.list[index] = fileObj;
+            } else if(directory.files[index]?.name === fileObj.name) {
+                directory.files[index] = fileObj;
             }
         }
     }
