@@ -12,7 +12,7 @@ NavBarProxy
     .actions    
         sui-button.lineButton(@click="addFileButtonHandler" :disabled="isSaving")  + Files
         sui-button.lineButton(@click="addFolderButtonHandler" :disabled="isSaving")  + Folders
-        sui-button.withIcon.lineButton(@click="deleteFiles" :disabled="!isSaving || !selectedFiles?.length")
+        sui-button.withIcon.lineButton(@click="deleteFiles" :disabled="isSaving || !selectedFiles?.length")
             Icon trash
         input(ref="folderUpload" type="file" webkitdirectory multiple hidden @change="e => addFolders(e)")
         input(ref="fileUpload" type="file" multiple hidden @change="e => addFiles(e)")
@@ -130,22 +130,25 @@ const uploadFiles = async () => {
     if (filesToUpload.value <= 0) return false;
 
     function saveToServiceFiles(file) {
-        function binarySearch(fileName) {
+        function binarySearch(fileObj) {
             let low = 0;
             directory.list.forEach((file) => {
-                if(file.type === 'folder') low++;
+                if(file.type === 'folder' && fileObj.type === 'file') low++;
             });
             let high = directory.list.length - 1;
             let mid = Math.floor((low + high) / 2);
-            let name = directory.list[mid].name;
+            let name = directory.list[mid]?.name;
+            if(!name) {
+                return 0;
+            }
 
             while (low <= high) {
                 mid = Math.floor((low + high) / 2);
                 name = directory.list[mid].name;
 
-                if (name < fileName && name[name.length - 1] !== '/') {
+                if (name < fileObj.name && name[name.length - 1] !== '/') {
                     low = mid + 1;
-                } else if (name > fileName && name[name.length - 1] !== '/') {
+                } else if (name > fileObj.name && name[name.length - 1] !== '/') {
                     high = mid - 1;
                 } else {
                     return mid;
@@ -153,9 +156,9 @@ const uploadFiles = async () => {
             }
 
 
-            if (fileName > name) {
+            if (fileObj.name > name) {
                 return mid + 1;
-            } else if (fileName < name) {
+            } else if (fileObj.name < name) {
                 return mid;
             }
         }
@@ -167,16 +170,53 @@ const uploadFiles = async () => {
             file: file
         }
 
-        let directory = service.value.files[service.value.subdomain + props.currentDirectory];
-        if (!directory.endOfList) {
-            let index = binarySearch(fileName);
+        let fileDirectoryTree = fileObj.file.name.split('/');
+        fileDirectoryTree.pop();
+        fileDirectoryTree = '/' + fileDirectoryTree.join('/');
+        if(props.currentDirectory !== '/') {
+            fileDirectoryTree += '/';
+        }
+        let directory = service.value.files[service.value.subdomain + fileDirectoryTree];
+        console.log({files:service.value.files, directory: service.value.subdomain + fileDirectoryTree});
+        if(!directory) {
+            directory = service.value.files[service.value.subdomain + fileDirectoryTree] = {
+                endOfList: false,
+                list: []
+            }
+
+            let folderToCreate = service.value.subdomain + fileDirectoryTree;
+            folderToCreate = folderToCreate.replace(service.value.subdomain + props.currentDirectory, '');
+            let folderToCreateArray = folderToCreate.split('/');
+            if(folderToCreateArray.length === 1) {
+                console.log(folderToCreate);
+                let folderObj = {
+                    name: folderToCreateArray[0] + '/',
+                    type: 'folder'
+                };
+                
+                let index = binarySearch(folderObj);
+                console.log({index});
+                let searchResult = service.value.files[service.value.subdomain + props.currentDirectory].list.find((item) => item.name === folderObj.name)
+                
+                if (!searchResult) {
+                    service.value.files[service.value.subdomain + props.currentDirectory].list.splice(index, 0, folderObj);
+                }
+            }
+            return false;
+        }
+
+        if (directory.endOfList) {
+            let index = binarySearch(fileObj);
             if (directory.list[index]?.name === fileObj.name) {
                 directory.list[index] = fileObj;
             } else {
+                if(directory.list[index].type === 'folder') {
+                    index++;
+                }
                 directory.list.splice(index, 0, fileObj);
             }
         } else {
-            let index = binarySearch(fileName);
+            let index = binarySearch(fileObj);
             if(index < directory.list.length) {
                 if (directory.list[index]?.name === fileObj.name) {
                     directory.list[index] = fileObj;
