@@ -274,8 +274,8 @@ const uploadFiles = async () => {
                                     interval = null;
                                 }
                             } catch (e) {
-                                throw e;
                                 clearInterval(interval);
+                                throw e;
                             }
                         }, 5);
                     }
