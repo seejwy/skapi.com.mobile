@@ -19,10 +19,9 @@ template(v-else)
                     span {{ folder }}/
                 span /
         .filesContainer
-            //- pre {{ service?.files }}
-            .fetching(v-if="isFetching")
+            .fetching(v-if="isFetching && !service?.files?.[service.subdomain+currentDirectory]?.list?.length")
                 Icon.animationRotation refresh
-            template(v-else-if="service?.files[service.subdomain+currentDirectory].list.length")
+            template(v-else-if="service?.files?.[service.subdomain+currentDirectory]?.list?.length")
                 template(v-for="(file) in service?.files[service.subdomain+currentDirectory].list")
                     .fileWrapper(v-if="!file.file")
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
@@ -36,6 +35,8 @@ template(v-else)
                             Icon file
                             a(:href="`https://${service.subdomain}.skapi.com${currentDirectory}${file.name}`" download).path-wrapper
                                 span.path {{ file.name }}
+                template(v-if="isFetching")
+                    .fileWrapper.animation-skeleton(v-for="i in 10")
             template(v-else)
                 div.noFiles
                     div.title No Files
@@ -43,7 +44,7 @@ template(v-else)
 </template>
 <!-- script below -->
 <script setup>
-import { inject, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { inject, ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { state, skapi } from '@/main';
 import { extractFileName } from '@/helper/files';
 import { useRouter } from 'vue-router';
@@ -62,6 +63,16 @@ const currentDirectory = ref('/')
 const isFetching = ref(false);
 const addView = ref(false);
 const isDeleting = ref(false);
+
+onMounted(() => {
+    window.addEventListener('scroll', mobileScrollHandler, { passive: true });
+});
+
+const mobileScrollHandler = (e) => {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+        getMoreDirectory(currentDirectory.value);
+    }
+}
 
 const currentDirectoryArray = computed(() => {
     selectedFiles.value = [];
@@ -161,7 +172,6 @@ const getDirectory = (directory) => {
     isFetching.value = true;
 
     skapi.listHostDirectory(params).then((files) => {
-        console.log(files)
         if (!service.value.hasOwnProperty('files')) {
             service.value.files = {}
         }
@@ -190,6 +200,49 @@ const getDirectory = (directory) => {
             }
         })
 
+
+        isFetching.value = false;
+    });
+}
+
+const getMoreDirectoryQueue = ref();
+
+const getMoreDirectory = (directory) => {
+    let findingDirectory = service.value.subdomain + (directory ? directory : '/');
+    if(isFetching.value || service.value.files[findingDirectory].endOfList) return false;
+
+    let params = {
+        service: service.value.service
+    }
+
+    if (directory) {
+        params.dir = directory;
+    }
+
+    isFetching.value = true;
+
+    skapi.listHostDirectory(params, {fetchMore: true}).then((files) => {
+        if (!service.value.hasOwnProperty('files')) {
+            service.value.files = {}
+        }
+
+        files.list.forEach((file) => {
+            let filename = extractFileName(file.name);
+
+            if (file.type === 'folder') {
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                    name: filename,
+                    type: 'folder'
+                })
+            } else {
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                    type: 'file',
+                    file,
+                    // url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
+                    name: filename
+                })
+            }
+        });
 
         isFetching.value = false;
     });
@@ -279,6 +332,10 @@ onBeforeUnmount(() => {
     }
 
     .fileWrapper {
+        &.animation-skeleton {
+            height: 52px;
+        }
+
         &:nth-child(even) {
             background: #4a4a4a;
         }
