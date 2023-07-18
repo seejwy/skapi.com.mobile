@@ -121,6 +121,16 @@ export default class Admin extends Skapi {
         await this.requireAdmin({ throwError: true });
         return this.request('request-newsletter-sender', { service, group_numb }, { auth: true });
     }
+    
+    async set404(service, subdomain, exec, page404) {
+        // page404 - file path in the storage to make 404 page ex) subdomain/error.html
+        // exec - 'set' for setting 404 page, 'get' for fetching current file path for 404 page.
+
+        // if exec == 'get', page404 dosent need a value
+
+        await this.requireAdmin({ throwError: true });
+        return this.request('set-404', { service, subdomain, page404, exec }, { auth: true });
+    }
 
     async createService(params) {
         /**
