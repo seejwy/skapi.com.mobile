@@ -27,7 +27,7 @@ template(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon folder2
-                            .path-wrapper(@click="getDirectory(currentDirectory+=file.name)")
+                            .path-wrapper(@click="goto(currentDirectory+=file.name)")
                                 span.path {{ file.name }}             
                     .fileWrapper(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
@@ -44,10 +44,10 @@ template(v-else)
 </template>
 <!-- script below -->
 <script setup>
-import { inject, ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { inject, ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { state, skapi } from '@/main';
 import { extractFileName } from '@/helper/files';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
 import LoadingCircle from '@/components/LoadingCircle.vue';
@@ -55,6 +55,7 @@ import Icon from '@/components/Icon.vue';
 import AddFiles from '@/views/Service/Subdomain/AddFiles.vue';
 
 let router = useRouter();
+let route = useRoute();
 let appStyle = inject('appStyle');
 let service = inject('service');
 const errorMessage = ref('');
@@ -66,6 +67,18 @@ const isDeleting = ref(false);
 
 onMounted(() => {
     window.addEventListener('scroll', mobileScrollHandler, { passive: true });
+});
+
+watch(() => route.params, () => {
+    if(route.params.folders !== undefined) {
+        if(route.params.folders.length) {
+            getDirectory(`/${route.params.folders.join('/')}/`);
+        } else {
+            currentDirectory.value = '';
+            getDirectory()
+        }
+    }
+
 });
 
 const mobileScrollHandler = (e) => {
@@ -81,8 +94,15 @@ const currentDirectoryArray = computed(() => {
     });
 })
 
+const goto = (folder) => {
+    let newRoute = folder.split('/');
+    newRoute.shift();
+    newRoute.pop();
+    router.push({name: 'files', params: {folders: newRoute}});
+}
+
 const jumpto = (index) => {
-    getDirectory(`/${currentDirectoryArray.value.slice(index * -1).reverse().join('/')}/`);
+    router.push({name: 'files', params: {folders: currentDirectoryArray.value.slice(index * -1).reverse()}});
 }
 
 const checkboxHandler = (e) => {
@@ -139,23 +159,13 @@ const deleteFiles = () => {
 }
 
 const goUpDirectory = () => {
-    let directoryArray = [...currentDirectoryArray.value];
-    directoryArray.reverse();
-    directoryArray.pop();
-
-    let newDirectory = '/';
-
-    if (directoryArray.length) {
-        newDirectory = `/${directoryArray.join('/')}/`;
-        getDirectory(newDirectory);
-    } else {
-        getDirectory();
-    }
-
-    currentDirectory.value = newDirectory;
+    let newRoute = [...route.params.folders];
+    newRoute.pop();
+    router.push({name: 'files', params: {folders: newRoute}});
 }
 
-const getDirectory = (directory) => {
+const getDirectory = (directory = '/') => {
+    currentDirectory.value = directory;
     let findingDirectory = service.value.subdomain + (directory ? directory : '/');
     if (service.value.files?.[findingDirectory]) {
         return service.value.files[findingDirectory];
@@ -172,6 +182,11 @@ const getDirectory = (directory) => {
     isFetching.value = true;
 
     skapi.listHostDirectory(params).then((files) => {
+        if(files.list.length === 0) {
+            router.push({name: 'files', params: {folders: []}});
+            return;
+        }
+
         if (!service.value.hasOwnProperty('files')) {
             service.value.files = {}
         }
@@ -228,7 +243,6 @@ const getMoreDirectory = (directory) => {
 
         files.list.forEach((file) => {
             let filename = extractFileName(file.name);
-
             if (file.type === 'folder') {
                 service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
                     name: filename,
@@ -248,7 +262,11 @@ const getMoreDirectory = (directory) => {
     });
 }
 
-getDirectory();
+if(route.params.folders) {
+    getDirectory('/'+route.params.folders.join('/') + '/');
+} else {
+    getDirectory();
+}
 
 appStyle.background = '#333333';
 

@@ -4,8 +4,6 @@ NavBarProxy(backgroundColor="#505050")
         div Service: "{{ service.name }}"
 EditService(v-if="state?.user && route.query.edit === 'service'")
 Subdomain(v-else-if="state?.user && route.query.edit === 'subdomain'")
-EditFiles(v-else-if="state?.user && route.query.edit === 'files'")
-//- AddFiles(v-else-if="state?.user && route.query.edit === 'upload'")
 template(v-else)
     .pageHeader.headSpaceHelper
         h2 Service
@@ -293,7 +291,7 @@ const edit = () => {
 
 const editFiles = () => {
     if (!state.user.email_verified) return false;
-    router.push('?edit=files');
+    router.push({name: 'files'});
 }
 
 const deleteServiceAsk = () => {
@@ -310,7 +308,6 @@ const onDrop = (event) => {
     const readEntriesAsync = (item) => {
         let reader = item.createReader();
         reader.readEntries((contents) => {
-            console.log("d")
             for (let content of contents) {
                 if (content.isDirectory) {
                     readEntriesAsync(content)
