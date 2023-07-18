@@ -77,37 +77,7 @@ template(v-else)
                             span Email System
                         .body Users are data that your service user's will store and read from your service database. 
                     .goto Go to Mail >
-    .container
-        .titleActionsWrapper
-            .titleWrapper
-                Icon mail
-                h2 Trigger Emails
-            .actions
-        .innerContainer
-            .emailGrid
-                .emailGridItem            
-                    .name 
-                        span Welcome Email
-                        Icon(@click="copyToClipboard(service.email_triggers.template_setters.welcome)") copy
-                    .value {{service.email_triggers.template_setters.welcome}}
-                        
-                .emailGridItem
-                    .name 
-                        span Newsletter Subscription
-                        Icon(@click="copyToClipboard(service.email_triggers.template_setters.newsletter_subscription)") copy
-                    .value {{service.email_triggers.template_setters.newsletter_subscription}}
-
-                .emailGridItem
-                    .name 
-                        span Email Verification
-                        Icon(@click="copyToClipboard(service.email_triggers.template_setters.verification)") copy
-                    .value {{service.email_triggers.template_setters.verification}}
-
-                .emailGridItem
-                    .name 
-                        span Signup Confirmation
-                        Icon(@click="copyToClipboard(service.email_triggers.template_setters.signup_confirmation)") copy
-                    .value {{service.email_triggers.template_setters.signup_confirmation}}
+    
     .container
         .titleActionsWrapper
             .titleWrapper
@@ -812,43 +782,6 @@ sui-tooltip {
 
     &.active {
         background: #5AD858;
-    }
-}
-
-.emailGrid {
-    &Item {
-        position: relative;
-        width: 100%;
-        background-color: rgba(255, 255, 255, 0.1);
-        padding: 24px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-
-        .name {
-            position: relative;
-            font-weight: bold;
-            font-size: 14px;
-            line-height: 1;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 8px;
-
-            svg {
-                position: absolute;
-                right: 0;
-                height: 18px;
-                width: 18px;
-                transform: translate(0, -2px);
-            }
-        }
-
-        .value {
-            color: rgba(255, 255, 255, 0.85);
-            word-break: break-all;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            font-size: 14px;
-        }
     }
 }
 

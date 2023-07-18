@@ -37,9 +37,8 @@
                 Icon folder_open
                 span Records
 
-            //- router-link(to='/')
-                //(:to="{name: 'mail'}")
-            //- Icon mail
+            router-link(:to="{name: 'mail'}")
+               Icon mail
 </template>
 
 <style lang="less">

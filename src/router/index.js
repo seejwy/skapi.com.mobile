@@ -6,6 +6,7 @@ import ServiceMain from '@/views/Service/Main.vue';
 import Service from '@/views/Service/Service.vue';
 import UsersMain from '@/views/Service/Users/Main.vue';
 import Users from '@/views/Service/Users/Users.vue';
+import Mail from '@/views/Main/Mail.vue';
 import RecordsMain from '@/views/Service/Records/Main.vue';
 import Tables from '@/views/Service/Records/Tables.vue';
 import TableRecord from '@/views/Service/Records/TableRecord.vue';
@@ -135,6 +136,11 @@ const router = createRouter({
                 },
               ]
             },
+            {
+              path: 'mail',
+              name: 'mail',
+              component: Mail
+            }
           ]
         }
       ]
