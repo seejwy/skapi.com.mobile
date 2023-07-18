@@ -11,10 +11,8 @@ NavBarProxy
 .overlay-container(:loading="isDisabled || null")
     .actions    
         sui-button.lineButton(@click="addFileButtonHandler" :disabled="isSaving")  + Files
-        sui-button.lineButton(@click="addFolderButtonHandler" :disabled="isSaving")  + Folders
         sui-button.withIcon.lineButton(@click="deleteFiles" :disabled="isSaving || !selectedFiles?.length")
             Icon trash
-        input(ref="folderUpload" type="file" webkitdirectory multiple hidden @change="e => addFolders(e)")
         input(ref="fileUpload" type="file" multiple hidden @change="e => addFiles(e)")
     .directory 
         span {{ currentDirectory }}
@@ -321,6 +319,7 @@ appStyle.background = '#333333';
         direction: rtl;
         text-align: left;
         display: inline-block;
+        margin: 28px 0px 10px;
 
         span {
             unicode-bidi: plaintext;
