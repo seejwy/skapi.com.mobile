@@ -117,9 +117,9 @@ export default class Admin extends Skapi {
         }
     }
 
-    async requestNewsletterSender(service, group) {
+    async requestNewsletterSender(service, group_numb) {
         await this.requireAdmin({ throwError: true });
-        return this.request('request-newsletter-sender', { service, group }, { auth: true });
+        return this.request('request-newsletter-sender', { service, group_numb }, { auth: true });
     }
 
     async createService(params) {
