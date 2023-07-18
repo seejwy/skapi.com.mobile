@@ -80,6 +80,15 @@ onMounted(() => {
         })
     }
 })
+
+const copyToClipboard = (email) => {
+    let doc = document.createElement('textarea');
+    doc.textContent = email;
+    document.body.append(doc);
+    doc.select();
+    document.execCommand('copy');
+    doc.remove();
+}
 </script>
 <style lang="less" scoped>
 

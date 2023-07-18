@@ -175,15 +175,6 @@ const fileList = reactive({});
 const fileUpload = ref(null);
 const folderUpload = ref(null);
 
-const copyToClipboard = (email) => {
-    let doc = document.createElement('textarea');
-    doc.textContent = email;
-    document.body.append(doc);
-    doc.select();
-    document.execCommand('copy');
-    doc.remove();
-}
-
 const informationGrid = reactive([
     {
         name: 'Service ID',
