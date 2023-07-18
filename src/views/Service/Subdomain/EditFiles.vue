@@ -29,9 +29,7 @@ template(v-else)
                             Icon folder2
                             .path-wrapper(@click="goto(currentDirectory+=file.name)")
                                 span.path {{ file.name }}             
-                    
-                template(v-for="(file) in service?.files[service.subdomain+currentDirectory].files")
-                    .fileWrapper
+                    .fileWrapper(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon file
@@ -130,30 +128,28 @@ const deleteFiles = () => {
             let index;
 
             if (result[result.length - 1] === '/') {
-                index = service.value.files[`${subdomain}${currentDirectory.value}`].folders.findIndex((path) => {
+                index = service.value.files[`${subdomain}${currentDirectory.value}`].list.findIndex((path) => {
                     return path.name === pathArray[pathArray.length - 2] + '/';
                 })
-
-                service.value.files[`${subdomain}${currentDirectory.value}`].folders.splice(index, 1);
             } else {
-                index = service.value.files[`${subdomain}${currentDirectory.value}`].files.findIndex((path) => {
+                index = service.value.files[`${subdomain}${currentDirectory.value}`].list.findIndex((path) => {
                     return path.name === extractFileName(result);
                 });
-
-                service.value.files[`${subdomain}${currentDirectory.value}`].files.splice(index, 1);
             }
 
-            if (service.value.files[`${subdomain}${currentDirectory.value}`].folders.length <= 0 && service.value.files[`${subdomain}${currentDirectory.value}`].files.length <= 0) {
+            service.value.files[`${subdomain}${currentDirectory.value}`].list.splice(index, 1);
+
+            if (service.value.files[`${subdomain}${currentDirectory.value}`].list.length <= 0) {
                 let oldDirectory = currentDirectory.value;
                 let newDirectory = currentDirectory.value.split('/');
                 newDirectory.splice(-2);
                 currentDirectory.value = newDirectory.join('/') + '/';
                 let folderToDelete = oldDirectory.replace(currentDirectory.value, '');
-                index = service.value.files[`${subdomain}${currentDirectory.value}`].folders.findIndex((path) => {
+                index = service.value.files[`${subdomain}${currentDirectory.value}`].list.findIndex((path) => {
                     return path.name === folderToDelete;
                 });
 
-                service.value.files[`${subdomain}${currentDirectory.value}`].folders.splice(index, 1);
+                service.value.files[`${subdomain}${currentDirectory.value}`].list.splice(index, 1);
             }
         });
         isDeleting.value = false;
@@ -197,8 +193,7 @@ const getDirectory = (directory = '/') => {
         if (!service.value.files[`${service.value.subdomain}${currentDirectory.value}`]) {
             service.value.files[`${service.value.subdomain}${currentDirectory.value}`] = {
                 endOfList: files.endOfList,
-                files: [],
-                folders: []
+                list: []
             };
         }
 
@@ -206,12 +201,12 @@ const getDirectory = (directory = '/') => {
             let filename = extractFileName(file.name);
 
             if (file.type === 'folder') {
-                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].folders.push({
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
                     name: filename,
                     type: 'folder'
                 })
             } else {
-                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].files.push({
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
                     type: 'file',
                     file,
                     // url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
