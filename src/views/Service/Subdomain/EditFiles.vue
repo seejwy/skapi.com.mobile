@@ -19,16 +19,15 @@ template(v-else)
                     span {{ folder }}/
                 span /
         .filesContainer
-            //- pre {{ service?.files }}
-            .fetching(v-if="isFetching")
+            .fetching(v-if="isFetching && !service?.files?.[service.subdomain+currentDirectory]?.list?.length")
                 Icon.animationRotation refresh
-            template(v-else-if="service?.files[service.subdomain+currentDirectory].files.length || service?.files[service.subdomain+currentDirectory].folders.length")
-                template(v-for="(file) in service?.files[service.subdomain+currentDirectory].folders")
-                    .fileWrapper
+            template(v-else-if="service?.files?.[service.subdomain+currentDirectory]?.list?.length")
+                template(v-for="(file) in service?.files[service.subdomain+currentDirectory].list")
+                    .fileWrapper(v-if="!file.file")
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon folder2
-                            .path-wrapper(@click="getDirectory(currentDirectory+=file.name)")
+                            .path-wrapper(@click="goto(currentDirectory+=file.name)")
                                 span.path {{ file.name }}             
                     
                 template(v-for="(file) in service?.files[service.subdomain+currentDirectory].files")
@@ -38,6 +37,8 @@ template(v-else)
                             Icon file
                             a(:href="`https://${service.subdomain}.skapi.com${currentDirectory}${file.name}`" download).path-wrapper
                                 span.path {{ file.name }}
+                template(v-if="isFetching")
+                    .fileWrapper.animation-skeleton(v-for="i in 10")
             template(v-else)
                 div.noFiles
                     div.title No Files
@@ -45,10 +46,10 @@ template(v-else)
 </template>
 <!-- script below -->
 <script setup>
-import { inject, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { inject, ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { state, skapi } from '@/main';
 import { extractFileName } from '@/helper/files';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
 import LoadingCircle from '@/components/LoadingCircle.vue';
@@ -56,6 +57,7 @@ import Icon from '@/components/Icon.vue';
 import AddFiles from '@/views/Service/Subdomain/AddFiles.vue';
 
 let router = useRouter();
+let route = useRoute();
 let appStyle = inject('appStyle');
 let service = inject('service');
 const errorMessage = ref('');
@@ -65,6 +67,28 @@ const isFetching = ref(false);
 const addView = ref(false);
 const isDeleting = ref(false);
 
+onMounted(() => {
+    window.addEventListener('scroll', mobileScrollHandler, { passive: true });
+});
+
+watch(() => route.params, () => {
+    if(route.params.folders !== undefined) {
+        if(route.params.folders.length) {
+            getDirectory(`/${route.params.folders.join('/')}/`);
+        } else {
+            currentDirectory.value = '';
+            getDirectory()
+        }
+    }
+
+});
+
+const mobileScrollHandler = (e) => {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+        getMoreDirectory(currentDirectory.value);
+    }
+}
+
 const currentDirectoryArray = computed(() => {
     selectedFiles.value = [];
     return currentDirectory.value.split('/').reverse().filter((value) => {
@@ -72,8 +96,15 @@ const currentDirectoryArray = computed(() => {
     });
 })
 
+const goto = (folder) => {
+    let newRoute = folder.split('/');
+    newRoute.shift();
+    newRoute.pop();
+    router.push({name: 'files', params: {folders: newRoute}});
+}
+
 const jumpto = (index) => {
-    getDirectory(`/${currentDirectoryArray.value.slice(index * -1).reverse().join('/')}/`);
+    router.push({name: 'files', params: {folders: currentDirectoryArray.value.slice(index * -1).reverse()}});
 }
 
 const checkboxHandler = (e) => {
@@ -132,23 +163,13 @@ const deleteFiles = () => {
 }
 
 const goUpDirectory = () => {
-    let directoryArray = [...currentDirectoryArray.value];
-    directoryArray.reverse();
-    directoryArray.pop();
-
-    let newDirectory = '/';
-
-    if (directoryArray.length) {
-        newDirectory = `/${directoryArray.join('/')}/`;
-        getDirectory(newDirectory);
-    } else {
-        getDirectory();
-    }
-
-    currentDirectory.value = newDirectory;
+    let newRoute = [...route.params.folders];
+    newRoute.pop();
+    router.push({name: 'files', params: {folders: newRoute}});
 }
 
-const getDirectory = (directory) => {
+const getDirectory = (directory = '/') => {
+    currentDirectory.value = directory;
     let findingDirectory = service.value.subdomain + (directory ? directory : '/');
     if (service.value.files?.[findingDirectory]) {
         return service.value.files[findingDirectory];
@@ -165,7 +186,11 @@ const getDirectory = (directory) => {
     isFetching.value = true;
 
     skapi.listHostDirectory(params).then((files) => {
-        console.log(files)
+        if(files.list.length === 0) {
+            router.push({name: 'files', params: {folders: []}});
+            return;
+        }
+
         if (!service.value.hasOwnProperty('files')) {
             service.value.files = {}
         }
@@ -200,7 +225,53 @@ const getDirectory = (directory) => {
     });
 }
 
-getDirectory();
+const getMoreDirectoryQueue = ref();
+
+const getMoreDirectory = (directory) => {
+    let findingDirectory = service.value.subdomain + (directory ? directory : '/');
+    if(isFetching.value || service.value.files[findingDirectory].endOfList) return false;
+
+    let params = {
+        service: service.value.service
+    }
+
+    if (directory) {
+        params.dir = directory;
+    }
+
+    isFetching.value = true;
+
+    skapi.listHostDirectory(params, {fetchMore: true}).then((files) => {
+        if (!service.value.hasOwnProperty('files')) {
+            service.value.files = {}
+        }
+
+        files.list.forEach((file) => {
+            let filename = extractFileName(file.name);
+            if (file.type === 'folder') {
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                    name: filename,
+                    type: 'folder'
+                })
+            } else {
+                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                    type: 'file',
+                    file,
+                    // url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
+                    name: filename
+                })
+            }
+        });
+
+        isFetching.value = false;
+    });
+}
+
+if(route.params.folders) {
+    getDirectory('/'+route.params.folders.join('/') + '/');
+} else {
+    getDirectory();
+}
 
 appStyle.background = '#333333';
 
@@ -284,6 +355,10 @@ onBeforeUnmount(() => {
     }
 
     .fileWrapper {
+        &.animation-skeleton {
+            height: 52px;
+        }
+
         &:nth-child(even) {
             background: #4a4a4a;
         }

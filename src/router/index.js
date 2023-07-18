@@ -4,8 +4,10 @@ import Main from '@/views/Main/Main.vue';
 import Signup from '@/views/Main/Signup.vue';
 import ServiceMain from '@/views/Service/Main.vue';
 import Service from '@/views/Service/Service.vue';
+import EditFiles from '@/views/Service/Subdomain/EditFiles.vue';
 import UsersMain from '@/views/Service/Users/Main.vue';
 import Users from '@/views/Service/Users/Users.vue';
+import Mail from '@/views/Main/Mail.vue';
 import RecordsMain from '@/views/Service/Records/Main.vue';
 import Tables from '@/views/Service/Records/Tables.vue';
 import TableRecord from '@/views/Service/Records/TableRecord.vue';
@@ -79,6 +81,11 @@ const router = createRouter({
               component: Service
             },
             {
+              path: 'files/:folders*',
+              name: 'files',
+              component: EditFiles
+            },
+            {
               path: 'records',
               component: RecordsMain,
               children: [
@@ -135,6 +142,11 @@ const router = createRouter({
                 },
               ]
             },
+            {
+              path: 'mail',
+              name: 'mail',
+              component: Mail
+            }
           ]
         }
       ]

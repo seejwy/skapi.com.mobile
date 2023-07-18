@@ -130,55 +130,38 @@ const uploadFiles = async () => {
     if (filesToUpload.value <= 0) return false;
 
     function saveToServiceFiles(file) {
-        function binarySearch(fileObj) {
-            let low = 0;
-            let high, name;
-            if(fileObj.type === 'folder') {
-                console.log("This is a folder")
-                // directory.folders.forEach((file) => {
-                //     if(file.type === 'folder' && fileObj.type === 'file') low++;
-                // });
-                high = directory.folders.length - 1;
-            } else {
-                high = directory.files.length - 1;
-            }
-            
-            let mid = Math.floor((low + high) / 2);
+        // function binarySearch(fileObj) {
+        //     let low = 0;
+        //     directory.list.forEach((file) => {
+        //         if(file.type === 'folder' && fileObj.type === 'file') low++;
+        //     });
+        //     let high = directory.list.length - 1;
+        //     let mid = Math.floor((low + high) / 2);
+        //     let name = directory.list[mid]?.name;
+        //     if(!name) {
+        //         return 0;
+        //     }
 
-            if(fileObj.type === 'folder') {
-                name = directory.folders[mid]?.name;
-            } else {
-                name = directory.files[mid]?.name;
-            }
+        //     while (low <= high) {
+        //         mid = Math.floor((low + high) / 2);
+        //         name = directory.list[mid].name;
 
-            if(!name) {
-                return 0;
-            }
-
-            while (low <= high) {
-                mid = Math.floor((low + high) / 2);
-                if(fileObj.type === 'folder') {
-                    name = directory.folders[mid]?.name;
-                } else {
-                    name = directory.files[mid]?.name;
-                }
-
-                if (name < fileObj.name && name[name.length - 1] !== '/') {
-                    low = mid + 1;
-                } else if (name > fileObj.name && name[name.length - 1] !== '/') {
-                    high = mid - 1;
-                } else {
-                    return mid;
-                }
-            }
+        //         if (name < fileObj.name && name[name.length - 1] !== '/') {
+        //             low = mid + 1;
+        //         } else if (name > fileObj.name && name[name.length - 1] !== '/') {
+        //             high = mid - 1;
+        //         } else {
+        //             return mid;
+        //         }
+        //     }
 
 
-            if (fileObj.name > name) {
-                return mid + 1;
-            } else if (fileObj.name < name) {
-                return mid;
-            }
-        }
+        //     if (fileObj.name > name) {
+        //         return mid + 1;
+        //     } else if (fileObj.name < name) {
+        //         return mid;
+        //     }
+        // }
 
         let fileName = extractFileName(file.name);
         let fileObj = {
@@ -194,7 +177,6 @@ const uploadFiles = async () => {
             fileDirectoryTree += '/';
         }
         let directory = service.value.files[service.value.subdomain + fileDirectoryTree];
-
         if(!directory) {
             directory = service.value.files[service.value.subdomain + fileDirectoryTree] = {
                 endOfList: false,
@@ -206,46 +188,45 @@ const uploadFiles = async () => {
             folderToCreate = folderToCreate.replace(service.value.subdomain + props.currentDirectory, '');
             let folderToCreateArray = folderToCreate.split('/');
             if(folderToCreateArray.length === 1) {
-                console.log(folderToCreate);
                 let folderObj = {
                     name: folderToCreateArray[0] + '/',
                     type: 'folder'
                 };
+                service.value.files[service.value.subdomain + props.currentDirectory].list.push(folderObj);
+                // let index = binarySearch(folderObj);
                 
-                let index = binarySearch(folderObj);
-                console.log({index});
-                let searchResult = service.value.files[service.value.subdomain + props.currentDirectory].folders.find((item) => item.name === folderObj.name)
+                // let searchResult = service.value.files[service.value.subdomain + props.currentDirectory].list.find((item) => item.name === folderObj.name)
                 
-                if (!searchResult) {
-                    service.value.files[service.value.subdomain + props.currentDirectory].folders.splice(index, 0, folderObj);
-                }
+                // if (!searchResult) {
+                //     service.value.files[service.value.subdomain + props.currentDirectory].list.splice(index, 0, folderObj);
+                // }
             }
             return false;
         }
-        console.log(directory, directory.endOfList + 'endoflist')
-        if (directory.endOfList) {
-            console.log({fileObj})
-            let index = binarySearch(fileObj);
-            if (directory.files[index]?.name === fileObj.name) {
-                directory.files[index] = fileObj;
-            } else {
-                if(directory.files[index].type === 'folder') {
-                    index++;
-                }
-                directory.files.splice(index, 0, fileObj);
-            }
-        } else {
-            let index = binarySearch(fileObj);
-            if(index < directory.files.length) {
-                if (directory.files[index]?.name === fileObj.name) {
-                    directory.files[index] = fileObj;
-                } else {
-                    directory.files.splice(index, 0, fileObj);
-                }
-            } else if(directory.files[index]?.name === fileObj.name) {
-                directory.files[index] = fileObj;
-            }
-        }
+
+        directory.list.push(fileObj);
+        // if (directory.endOfList) {
+            // let index = binarySearch(fileObj);
+            // if (directory.list[index]?.name === fileObj.name) {
+            //     directory.list[index] = fileObj;
+            // } else {
+            //     if(directory.list[index].type === 'folder') {
+            //         index++;
+            //     }
+            //     directory.list.splice(index, 0, fileObj);
+            // }
+        // } else {
+        //     let index = binarySearch(fileObj);
+        //     if(index < directory.list.length) {
+        //         if (directory.list[index]?.name === fileObj.name) {
+        //             directory.list[index] = fileObj;
+        //         } else {
+        //             directory.list.splice(index, 0, fileObj);
+        //         }
+        //     } else if(directory.list[index]?.name === fileObj.name) {
+        //         directory.list[index] = fileObj;
+        //     }
+        // }
     }
 
     let formData = new FormData();
@@ -255,9 +236,7 @@ const uploadFiles = async () => {
     }
     isSaving.value = true;
 
-    let interval = null;
     let progress = 0;
-    let testTimer = 0;
     try {
         state.blockingPromise = await skapi.uploadFiles(formData, {
             service: service.value.service,
@@ -276,9 +255,8 @@ const uploadFiles = async () => {
                     fileList.value[e.currentFile.name].abort = e.abort;
                     fileList.value[e.currentFile.name].progress = e.progress;
                     if (!fileList.value[e.currentFile.name].currentProgress) fileList.value[e.currentFile.name].currentProgress = 0;
-                    if (!interval) {
-                        interval = setInterval(() => {
-                            testTimer++;
+                    if (!fileList.value[e.currentFile.name].interval) {
+                        fileList.value[e.currentFile.name].interval = setInterval(() => {
                             try {
 
                                 if (fileList.value[e.currentFile.name].currentProgress < progress) {
@@ -289,12 +267,12 @@ const uploadFiles = async () => {
                                     filesToUpload.value--;
                                     // service.value.files[e.currentFile.name] = `https://${service.value.subdomain}.skapi.com/${e.currentFile.name}`
                                     saveToServiceFiles(e.currentFile);
-                                    clearInterval(interval);
+                                    clearInterval(fileList.value[e.currentFile.name].interval);
                                     interval = null;
                                 }
                             } catch (e) {
+                                clearInterval(fileList.value[e.currentFile.name].interval);
                                 throw e;
-                                clearInterval(interval);
                             }
                         }, 5);
                     }
