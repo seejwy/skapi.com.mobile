@@ -117,6 +117,11 @@ export default class Admin extends Skapi {
         }
     }
 
+    async requestNewsletterSender(service, group) {
+        await this.requireAdmin({ throwError: true });
+        return this.request('request-newsletter-sender', { service, group }, { auth: true });
+    }
+
     async createService(params) {
         /**
             'region': [str, lambda: os.environ['REGION']],
