@@ -198,19 +198,21 @@ const getDirectory = (directory = '/') => {
         }
 
         files.list.forEach((file) => {
-            let filename = extractFileName(file.name);
+            if(file.name !== service.value.subdomain + '/.cfacdb7c8270a90aba6011585793dfc3/' && file.name !== service.value.subdomain + '/cfacdb7c8270a90aba6011585793dfc3.html') {
+                let filename = extractFileName(file.name);
 
-            if (file.type === 'folder') {
-                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
-                    name: filename,
-                    type: 'folder'
-                })
-            } else {
-                service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
-                    type: 'file',
-                    file,
-                    name: filename
-                })
+                if (file.type === 'folder') {
+                    service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                        name: filename,
+                        type: 'folder'
+                    })
+                } else {
+                    service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
+                        type: 'file',
+                        file,
+                        name: filename
+                    })
+                }
             }
         })
 

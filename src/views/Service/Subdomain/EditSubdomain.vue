@@ -42,6 +42,7 @@ watch(() => service.value[404], () => {
 });
 
 const save404 = () => {
+    errorMessage.value = '';
     isSaving.value = true;
     let filePath = service.value.subdomain + '/' + errorFile.value;
     if (!errorFile.value) {
@@ -77,6 +78,7 @@ const save404 = () => {
                 }
             });
         } else {
+            delete service.value[404];
             isSaving.value = false;
             router.replace({name: 'service'});
         }
