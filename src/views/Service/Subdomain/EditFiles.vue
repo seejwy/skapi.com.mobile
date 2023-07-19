@@ -182,11 +182,11 @@ const getDirectory = (directory = '/') => {
     isFetching.value = true;
 
     skapi.listHostDirectory(params).then((files) => {
-        if(files.list.length === 0) {
+        if(files.list.length === 0 && route.params.folders.length) {
+            isFetching.value = false;
             router.push({name: 'files', params: {folders: []}});
             return;
         }
-
         if (!service.value.hasOwnProperty('files')) {
             service.value.files = {}
         }
