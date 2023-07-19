@@ -209,7 +209,6 @@ const getDirectory = (directory = '/') => {
                 service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
                     type: 'file',
                     file,
-                    // url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
                     name: filename
                 })
             }
@@ -219,8 +218,6 @@ const getDirectory = (directory = '/') => {
         isFetching.value = false;
     });
 }
-
-const getMoreDirectoryQueue = ref();
 
 const getMoreDirectory = (directory) => {
     let findingDirectory = service.value.subdomain + (directory ? directory : '/');
@@ -252,7 +249,6 @@ const getMoreDirectory = (directory) => {
                 service.value.files[`${service.value.subdomain}${currentDirectory.value}`].list.push({
                     type: 'file',
                     file,
-                    // url: `https://${service.value.subdomain}.skapi.com${currentDirectory.value}${filename}`,
                     name: filename
                 })
             }

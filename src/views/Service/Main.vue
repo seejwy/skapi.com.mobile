@@ -126,6 +126,19 @@ provide('serviceUsers', ref(null));
 provide('userStatus', ref({}));
 provide('fetchingData', ref(false));
 
+
+
+const get404 = () => {
+    skapi.listHostDirectory({service: service.value.service, dir: '.cfacdb7c8270a90aba6011585793dfc3/*'}).then((res) => {
+        if(res.list.length) {
+            let path = res.list[0].name.split('/');
+            path.shift();
+            path.shift();
+            service.value[404] = path.join('/');
+        }
+    })
+}
+
 onMounted(() => {
     awaitConnection.then(()=>{
         recordTables.value = null;
@@ -153,6 +166,7 @@ function getServices(gs) {
             for (let s of services[region]) {
                 if (s.service === serviceId) {
                     service.value = s;
+                    get404();
                     return s;
                 }
             }

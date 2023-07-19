@@ -4,6 +4,7 @@ NavBarProxy(backgroundColor="#505050")
         div Service: "{{ service.name }}"
 EditService(v-if="state?.user && route.query.edit === 'service'")
 Subdomain(v-else-if="state?.user && route.query.edit === 'subdomain'")
+EditSubdomain(v-else-if="state?.user && route.query.edit === 'editsubdomain'")
 template(v-else)
     .pageHeader.headSpaceHelper
         h2 Service
@@ -82,8 +83,8 @@ template(v-else)
                 Icon domain
                 h2 Subdomain 
             .actions(:class="{'disabled': !state.user.email_verified ? true : null}")
-                Icon(v-if="service.subdomain" @click="deleteSubdomainAsk") trash
-                Icon(v-else @click="router.push('?edit=subdomain')" ) plus
+                Icon(v-if="service.subdomain" @click="router.push('?edit=editsubdomain')") pencil
+                Icon(v-else @click="router.push('?edit=subdomain')") plus
         .innerContainer
             .domainGrid(v-if="!service.subdomain")
                 div No Domain Created
@@ -102,8 +103,6 @@ template(v-else)
                 .actions(@click="refreshCDN") 
                     Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
                     div Refresh CDN
-
-
             .domainGrid.deleting(v-else) 
                 h3 Deleting subdomain ...
                 span It may take a few minutes for a subdomain to be deleted.
@@ -149,6 +148,7 @@ import { useRoute, useRouter } from 'vue-router';
 import NavBarProxy from '@/components/NavBarProxy.vue';
 import EditService from '@/views/Service/EditService.vue';
 import Subdomain from '@/views/Service/Subdomain/Subdomain.vue';
+import EditSubdomain from '@/views/Service/Subdomain/EditSubdomain.vue';
 import EditFiles from '@/views/Service/Subdomain/EditFiles.vue';
 import AddFiles from '@/views/Service/Subdomain/AddFiles.vue';
 import Icon from '@/components/Icon.vue';
