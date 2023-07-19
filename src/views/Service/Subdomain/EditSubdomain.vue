@@ -54,8 +54,6 @@ const save404 = () => {
             skapi.deleteHostFile({
                 keys: [service.value.subdomain + '/.cfacdb7c8270a90aba6011585793dfc3/'],
                 service: service.value.service
-            }).then((res) => {
-                console.log({res})
             });
         }
         if(filePath) {
@@ -69,7 +67,6 @@ const save404 = () => {
                 service: service.value.service,
                 request: 'host',
                 progress: (e) => {
-                    console.log(e);
                     if(e.progress === 100) {                 
                         service.value[404] = errorFile.value;
                         isSaving.value = false;
