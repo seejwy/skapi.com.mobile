@@ -16,15 +16,17 @@ NavBarProxy
             .emailGridItem            
                 .name 
                     span Public Newsletter (Group 0)
-                    Icon(@click="copyToClipboard(service?.newsletter_triggers?.[0])") copy
+                    button(@click="copyToClipboard(service?.newsletter_triggers?.[0])")
+                        Icon copy
                 .value
                     template(v-if="service?.newsletter_triggers?.[0]") {{service?.newsletter_triggers?.[0]}}
                     template(v-else) Loading...
-                    
+
             .emailGridItem
                 .name 
                     span Users Newsletter (Group 1)
-                    Icon(@click="copyToClipboard(service?.newsletter_triggers?.[1])") copy
+                    button(@click="copyToClipboard(service?.newsletter_triggers?.[1])") 
+                        Icon copy
                 .value
                     template(v-if="service?.newsletter_triggers?.[1]") {{service?.newsletter_triggers?.[1]}}
                     template(v-else) Loading...
@@ -39,25 +41,29 @@ NavBarProxy
             .emailGridItem            
                 .name 
                     span Welcome Email
-                    Icon(@click="copyToClipboard(service?.email_triggers.template_setters.welcome)") copy
+                    button(@click="copyToClipboard(service?.email_triggers.template_setters.welcome)") 
+                        Icon copy
                 .value {{service?.email_triggers.template_setters.welcome}}
-                    
+
             .emailGridItem
                 .name 
                     span Newsletter Subscription
-                    Icon(@click="copyToClipboard(service?.email_triggers.template_setters.newsletter_subscription)") copy
+                    button(@click="copyToClipboard(service?.email_triggers.template_setters.newsletter_subscription)") 
+                        Icon copy
                 .value {{service?.email_triggers.template_setters.newsletter_subscription}}
 
             .emailGridItem
                 .name 
                     span Email Verification
-                    Icon(@click="copyToClipboard(service?.email_triggers.template_setters.verification)") copy
+                    button(@click="copyToClipboard(service?.email_triggers.template_setters.verification)") 
+                        Icon copy
                 .value {{service?.email_triggers.template_setters.verification}}
 
             .emailGridItem
                 .name 
                     span Signup Confirmation
-                    Icon(@click="copyToClipboard(service?.email_triggers.template_setters.signup_confirmation)") copy
+                    button(@click="copyToClipboard(service?.email_triggers.template_setters.signup_confirmation)") 
+                        Icon copy
                 .value {{service?.email_triggers.template_setters.signup_confirmation}}
 </template>
 <script setup>
@@ -70,7 +76,7 @@ import NavBarProxy from '@/components/NavBarProxy.vue';
 let service = inject('service');
 
 onMounted(() => {
-    if(!service.value.hasOwnProperty('newsletter_triggers')) {
+    if (!service.value.hasOwnProperty('newsletter_triggers')) {
         service.value.newsletter_triggers = [];
         Promise.all([
             skapi.requestNewsletterSender(service.value.service, 0),
@@ -82,16 +88,31 @@ onMounted(() => {
 })
 
 const copyToClipboard = (email) => {
-    let doc = document.createElement('textarea');
-    doc.textContent = email;
-    document.body.append(doc);
-    doc.select();
-    document.execCommand('copy');
-    doc.remove();
+    let button = document.activeElement;
+
+    try {
+        return navigator.clipboard.writeText(email)
+    } catch {
+        let doc = document.createElement('textarea')
+        doc.value = email;
+        doc.setAttribute("readonly", "");
+        doc.style.contain = "strict";
+        doc.style.position = "absolute";
+        doc.style.left = "-9999px";
+        doc.style.fontSize = "12pt";
+        document.body.append(doc);
+        doc.select();
+        document.execCommand('copy');
+        doc.remove();
+    } finally {
+        button.classList.add('copied');
+        setTimeout(() => {
+            button.classList.remove('copied');
+        }, 1000);
+    }
 }
 </script>
 <style lang="less" scoped>
-
 .container {
     margin: 40px 0 0;
     border-radius: 0;
@@ -190,6 +211,10 @@ const copyToClipboard = (email) => {
         padding: 24px;
         border-radius: 8px;
         margin-bottom: 16px;
+        
+        svg {
+            cursor: pointer;
+        }
 
         .name {
             position: relative;
@@ -199,12 +224,49 @@ const copyToClipboard = (email) => {
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 8px;
 
-            svg {
+            button {
                 position: absolute;
                 right: 0;
-                height: 18px;
-                width: 18px;
-                transform: translate(0, -2px);
+                background-color: transparent;
+                border: none;
+                padding: 2px;
+                border-radius: 4px;
+
+                &:active {
+                    background-color: rgba(0, 0, 0, 0.1);
+                }
+                
+                @media (hover: hover) and (pointer: fine) {
+                    &:hover {
+                        background-color: rgba(0, 0, 0, 0.1);
+                    }
+                }
+
+                &::before {
+                    position: absolute;
+                    display: block;
+                    right: 25px;
+                    top: 0;
+                    text-align: center;
+                    font-size: 12px;
+                    color: rgba(255, 255, 255, 0.5);
+                    background-color: rgba(0, 0, 0, 0.1);
+                    border-radius: 4px;
+                    padding: 4px;
+                    content: "Copied";
+                    transition: opacity .4s;
+                    opacity: 0;
+                }
+
+                &.copied::before {
+                    opacity: 1;
+                }
+
+                svg {
+                    fill: #fff;
+                    height: 18px;
+                    width: 18px;
+                }
             }
         }
 
