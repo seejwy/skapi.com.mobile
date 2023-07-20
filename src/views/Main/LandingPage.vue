@@ -9,7 +9,7 @@ section#section.intro
             img.btnImg(src="@/assets/img/icons/Asset6.svg")
             span Get Started
             img.arrowImg(src="@/assets/img/icons/arrow_right.svg")
-        img.mainImgMobile(src="@/assets/img/icons/main_illu_mobile.svg")
+img.mainImg(src="@/assets/img/icons/main_illu_mobile.svg")
 
 section#section.video
     .container 
@@ -22,8 +22,8 @@ section#section.video
                 | Start building a full functioning web services directly from your HTML/Javascript.
             a(href='https://docs.skapi.com' target="_blank")
                 sui-button Read Document
-        .youtube 
-            iframe.video(src="https://www.youtube.com/embed/c5jdIE9wl_8?&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen)
+.youtube 
+    iframe.video(src="https://www.youtube.com/embed/c5jdIE9wl_8?&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen)
 
 section#section.features 
     .container 
@@ -34,17 +34,24 @@ section#section.features
                 .icon
                     img(src="@/assets/img/icons/Serverless.svg")
                 h4.tit Serverless
-                p.desc No need for server setup. No complex frameworks. No dealing with terminals. 100% Serverless.
+                p.desc No need for server setup. #[br]
+                    | No complex frameworks. #[br]
+                    | No dealing with terminals. #[br]
+                    | 100% Serverless.
             .card 
                 .icon
                     img(src="@/assets/img/icons/Database.png")
                 h4.tit Database
-                p.desc No schema, No SQL queries required. Yet, full flexibility that scales with your needs.
+                p.desc No schema,  #[br]
+                    | No SQL queries required.  #[br]
+                    | Yet, full flexibility that scales with your needs.
             .card 
                 .icon
                     img(src="@/assets/img/icons/Authentication.png")
                 h4.tit Authentication
-                p.desc Security all figured out for you. CORS restriction, Storage / database security, Login, signup... It just works.
+                p.desc Security all figured out for you.  #[br]
+                    | CORS restriction,  #[br]
+                    | Storage / database security, Login, signup... It just works.
             .card 
                 .icon
                     img(src="@/assets/img/icons/landing_page_html_logo.png")
@@ -109,7 +116,7 @@ let activeBar = ref(false);
 let barControl = () => {
     let currentScroll = window.scrollY + (window.innerHeight / 1.5);
 
-    if(currentScroll >= startSection.value.offsetTop) {
+    if (currentScroll >= startSection.value.offsetTop) {
         activeBar.value = true;
     } else {
         activeBar.value = false;
@@ -146,83 +153,107 @@ main {
         color: #262626;
     }
 
+    .youtube {
+        width: 100%;
+        margin: 68px 0 100px;
+
+        .video {
+            width: 100%;
+            height: 400px;
+            box-shadow: 7px 7px 18px #bbb;
+        }
+    }
+
+
+
+    .mainImg {
+        display: block;
+        width: 100%;
+        margin: 60px 0;
+    }
+
     #section {
         .container {
+            padding: 0 20px;
             margin: 0 auto;
-            width: 1280px;
+            width: 100%;
             box-sizing: border-box;
 
             h1 {
-                font-size: 80px;
-                margin: 40px 0;
+                font-size: 48px;
+                margin: 24px 0 12px 0;
             }
+
             h4 {
-                font-size: 36px;
+                font-size: 28px;
                 font-weight: 700;
                 margin: 28px 0 100px 0;
             }
+
             h5 {
                 font-size: 28px;
                 font-weight: 700;
                 color: #293FE6;
                 margin: 0;
             }
+
+            span {
+                font-size: 20px;
+            }
+
+            p {
+                font-size: 20px;
+            }
         }
 
         &.intro {
-            height: 740px;
-            margin: 75px;
+            margin: 50px 0 20px 0;
             font-weight: 700;
 
             .container {
                 position: relative;
-                width: 1280px;
+                width: 100%;
                 height: 100%;
 
-                .mainImg {
-                    position: absolute;
-                    right: -80px;
-                    bottom: 50px;
-                    width: 1280px;
-                }
-                span {
-                    font-size: 24px;
-                }
                 p {
                     display: inline-block;
-                    font-size: 32px;
+                    font-size: 20px;
                     font-weight: 500;
                     margin: 0 0 50px 0;
                     background: linear-gradient(180deg, #FAFF00 0%, rgba(255, 230, 0, 0.00) 97.55%);
                 }
+
                 a {
                     position: relative;
-                    text-align: right;
+                    text-align: left;
+                    display: inline-block;
+                    height: 40px;
                     text-decoration: none;
                     font-size: 24px;
+                    margin-left: -20px;
+
+                    font-size: 20px;
                     color: #fff;
 
                     .btnImg {
-                        position: absolute;
-                        left: 0;
-                        top: -10px;
-                        // transform: translate(-50%, -50%);
                         transform: rotate(180deg);
-                        width: 290px;
+                        width: 220px;
                     }
 
                     .arrowImg {
                         position: absolute;
-                        right: -280px;
-                        top: -10px;
-                        width: 50px;
+                        right: 10px;
+                        width: 40px;
+                        top: 50%;
+                        transform: translateY(-50%);
                         filter: invert(100%);
                     }
 
                     span {
                         position: absolute;
-                        left: 85px;
-                        z-index: 2;
+                        top: 50%;
+                        left: 50px;
+                        transform: translateY(-50%);
                         white-space: nowrap;
                     }
                 }
@@ -234,73 +265,67 @@ main {
                 display: flex;
                 flex-wrap: nowrap;
                 justify-content: space-between;
-    
+
                 .desc {
-                    width: 48.5%;
+                    width: 100%;
+                    padding: 0 20px;
+
                     h4 {
-                        margin: 40px 0;
+                        margin: 24px 0;
                     }
+
                     p {
-                        font-size: 24px;
+                        font-size: 20px;
                         font-weight: 500;
                         line-height: 32px;
                         margin: 0 0 40px 0;
-        
+
                         span {
                             color: #293FE6;
                         }
-                    }
-                }
-                .youtube {
-                    width: 48.5%;
-
-                    .video {
-                        width: 100%;
-                        height: 100%;
-                        border-radius: 8px;
-                        box-shadow: 7px 7px 18px #bbb;
                     }
                 }
             }
         }
 
         &.features {
-            margin: 200px 0;
-
             .cardWrap {
                 width: 100%;
-                display: flex;
-                flex-wrap: nowrap;
 
                 &:last-child {
                     margin-right: 0;
                 }
-                
+
                 .card {
+                    width: 100%;
+                    margin-bottom: 75px;
+
                     &:first-child {
                         .icon {
                             padding: 7px 0;
                         }
                     }
+
                     &:last-child {
                         .icon {
                             padding: 10px 0;
                         }
                     }
-                    width: 23%;
-                    margin-right: 2%;
 
                     .icon {
                         height: 70px;
+
                         img {
                             height: 100%;
                         }
                     }
+
                     .tit {
                         font-size: 24px;
                         font-weight: 700;
                         margin: 27px 0;
                     }
+
                     .desc {
                         font-size: 20px;
                         font-weight: 400;
@@ -311,24 +336,29 @@ main {
         }
 
         &.start {
-            margin-bottom: 200px;
+            margin-bottom: 120px;
+
+            h4 {
+                margin-bottom: 50px;
+            }
 
             .startWrap {
                 width: 100%;
                 display: flex;
-                flex-wrap: nowrap;
+                flex-direction: row;
+                flex-wrap: wrap;
 
                 .steps {
-                    width: 33%;
-                    margin-right: 2%;
+                    width: 100%;
                     display: flex;
-                    flex-wrap: nowrap;
+                    gap: 25px;
 
                     .bar {
-                        width: 30px;
+                        flex-shrink: 0;
+                        width: 20px;
                         height: 100%;
                         background-color: #ddd;
-                        margin-right: 20px;
+                        border-radius: 4px;
 
                         &.active {
                             background-image: linear-gradient(to bottom, #001CE9 0%, #fff 96%);
@@ -345,18 +375,21 @@ main {
                             }
                         }
                     }
+
                     .cont {
                         .step {
                             margin-bottom: 40px;
-        
+
                             &:last-child {
                                 margin-bottom: 0;
                             }
+
                             .tit {
                                 font-size: 24px;
                                 font-weight: 700;
                                 margin-bottom: 12px;
                             }
+
                             .desc {
                                 font-size: 16px;
                                 font-weight: 400;
@@ -369,10 +402,12 @@ main {
                         }
                     }
                 }
+
                 .code {
                     position: relative;
-                    width: 65%;
-                    
+                    width: 100%;
+                    margin-top: 60px;
+
                     .preCode {
                         position: relative;
                         height: 100%;
@@ -385,12 +420,12 @@ main {
                         overflow-x: auto;
                         overflow-y: hidden;
                         display: flex;
-                        // align-items: center;
                         padding: 40px 60px 60px 65px;
 
                         span {
                             color: #7C8CFF;
                         }
+
                         .codeNum {
                             position: absolute;
                             top: 55px;
@@ -403,7 +438,7 @@ main {
                         }
                     }
 
-                    
+
                     .codeCopy {
                         position: absolute;
                         right: 24px;
@@ -425,27 +460,21 @@ main {
 
         &.signup {
             width: 100%;
-            height: auto;
-            // height: 375px;
-            padding: 100px 0;
+            padding: 40px 20px;
             background: url("src/assets/img/icons/Asset 33.png") no-repeat center;
             background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
+
             .cont {
                 text-align: center;
-                
+
                 p {
                     font-size: 20px;
-                    font-weight: 500;
                     line-height: 28px;
                     color: #fff;
                     margin: 0 0 30px 0;
                 }
+
                 button {
-                    position: relative;
                     width: 180px;
                     height: 40px;
                     font-weight: 700;
@@ -462,388 +491,4 @@ main {
     }
 }
 
-@media (max-width: 1360px) {
-    main {
-        #section {
-            .container {
-                width: 100%;
-                padding: 0 40px;
-            }
-
-            &.intro {
-                margin: 50px 0 20px 0;
-
-                .container {
-                    .mainImg {
-                        width: 100%;
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 1000px) {
-    main {
-        #section {
-            .container {
-                h1 {
-                    font-size: 8.0vw;
-                }
-                h4 {
-                    font-size: 3.6vw;
-                }
-                h5 {
-                    font-size: 2.8vw;
-                }
-            }
-
-            &.intro {
-                .container {
-                    width: auto;
-                    p {
-                        font-size: 3.2vw;
-                    }
-                    a {
-                        font-size: 2.4vw;
-                    }
-                    .mainImg {
-                        width: 127vw;
-                        right: auto;
-                        transform: translate(-20px);
-                    }
-                }
-            }
-
-            &.video {
-                .container {
-                    .desc {
-                        p {
-                            font-size: 2.4vw;
-                        }
-                    }
-                }
-            }
-
-            &.features {
-                .cardWrap {
-                    .card {
-                        .tit {
-                            font-size: 2.4vw;
-                        }
-                        .desc {
-                            font-size: 2vw;
-                        }
-                    }
-                }
-            }
-
-            &.start {
-                .startWrap {
-                    .steps {
-                        .cont {
-                            .step {
-                                .tit {
-                                    font-size: 2.4vw;
-                                }
-                                .desc {
-                                    font-size: 1.6vw;
-                                }
-                            }
-                        }
-                    }
-                    .code {
-                        .preCode {
-                            font-size: 1.6vw;
-                        }
-                    }
-                }
-            }
-
-            &.signup {
-                .cont {
-                    p {
-                        font-size: 2vw;
-                    }
-                    button {
-                        font-size: 1.6vw;
-                    }
-                }
-
-            }
-        }
-    }
-}
-
-@media (max-width: 820px) {
-    main {
-        #section {
-            .container {
-                h1 {
-                    font-size: 62px;
-                }
-                h4 {
-                    font-size: 32px;
-                }
-                h5 {
-                    font-size: 28px;
-                }
-            }
-
-            &.intro {
-                .container {
-                    a {
-                        .btnImg {
-                            width: 250px;
-                        }
-                        .arrowImg {
-                            width: 40px;
-                            top: -8px;
-                            right: -243px;
-                        }
-                        span {
-                            font-size: 20px;
-                            top: -1px;
-                        }
-                    }
-                    span {
-                        font-size: 24px;
-                    }
-                    p {
-                        font-size: 28px;
-                    }
-                    a {
-                        font-size: 20px;
-                    }
-                }
-            }
-
-            &.video {
-                .container {
-                    flex-wrap: wrap;
-
-                    .desc {
-                        width: 100%;
-
-                        p {
-                            font-size: 20px;
-                            line-height: 28px;
-                        }
-                        a {
-                            sui-button {
-                                margin-bottom: 40px;
-                            }
-                        }
-                    }
-                    .youtube {
-                        width: 100%;
-
-                        .video {
-                            height: 400px;
-                        }
-                    }
-                }
-            }
-
-            &.features {
-                .container {
-                    .cardWrap {
-                        flex-wrap: wrap;
-
-                        .card {
-                            width: 48%;
-                            margin-right: 4%;
-
-                            &:nth-child(2),&:nth-child(4) {
-                                margin-right: 0;
-                            }
-                            .tit {
-                                font-size: 24px;
-                            }
-                            .desc {
-                                font-size: 20px;
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.start {
-                .container {
-                    h4 {
-                        margin-bottom: 50px;
-                    }
-                    .startWrap {
-                        flex-wrap: wrap;
-
-                        .steps {
-                            width: 100%;
-                            margin-bottom: 50px;
-
-                            .bar {
-                                width: 12px;
-                            }
-                            .cont {
-                                .step {
-                                    .tit {
-                                        font-size: 24px;
-                                    }
-                                    .desc {
-                                        font-size: 16px;
-                                    }
-                                }
-                            }
-                        }
-                        .code {
-                            width: 100%;
-
-                            .preCode {
-                                font-size: 14px;
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.signup {
-                padding: 80px 40px;
-
-                .cont {
-                    p {
-                        font-size: 20px;
-                        line-height: 28px;
-                    }
-                    button {
-                        font-size: 16px;
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 500px) {
-    main {
-        #section {
-            .container {
-                padding: 0 20px;
-
-                h1 {
-                    font-size: 48px;
-                    margin: 24px 0 12px 0;
-                }
-                h4 {
-                    font-size: 28px;
-                }
-            }
-
-            &.intro {
-                // height: 560px;
-                margin-bottom: 0;
-
-                .container {
-                    width: 100%;
-
-                    a {
-                        .btnImg {
-                            width: 220px;
-                        }
-                        .arrowImg {
-                            width: 35px;
-                            top: -8px;
-                            right: -213px;
-                        }
-                        span {
-                            left: 60px;
-                            top: -3px;
-                        }
-                    }
-                    span {
-                        font-size: 20px;
-                    }
-                    p {
-                        font-size: 20px;
-                    }
-                    .mainImg {
-                        display: none;
-                    }
-                    .mainImgMobile {
-                        display: block;
-                        position: absolute;
-                        width: 160vw;
-                        min-width: 700px;
-                        transform: translate(-100px, -50px);
-                    }
-                }
-            }
-
-            &.video {
-                .container {
-                    padding: 0;
-
-                    .desc {
-                        padding: 0 20px;
-                        width: 100%;
-
-                        h4 {
-                            margin: 24px 0;
-                        }
-                    }
-                    .youtube {
-                        width: 100%;
-                        
-                        .video {
-                            border-radius: 0;
-                            height: 400px;
-                        }
-                    }
-                }
-            }
-
-            &.features {
-                margin: 100px 0;
-
-                .container {
-                    h4 {
-                        margin: 28px 0 50px 0;
-                    }
-                    .cardWrap {
-                        .card {
-                            width: 100%;
-                            margin-bottom: 5%;
-
-                            &:last-child {
-                                margin-bottom: 0;
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.start {
-                margin-bottom: 120px;
-
-                .container {
-                    .startWrap {
-                        .steps {
-                            .bar {
-                                width: 20px;
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.signup {
-                padding: 40px 20px;
-
-                .cont {
-                    p {
-                        font-size: 16px;
-                    }
-                }
-            }
-        }
-    }
-}
 </style>
