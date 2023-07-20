@@ -8,12 +8,34 @@ NavBarProxy
     form.admin(@submit.prevent="save404" action="")
         .subdomain
             .title Subdomain
-            .value {{ service.subdomain }}
+            .value {{ service?.subdomain }}
+            button(type="button" @click="deleteSubdomainAsk")
+                Icon trash
         label
             div 404 File
             sui-input(type="text" placeholder="Enter path eg. /404.html" :value="errorFile" @input="(e) => errorFile = e.target.value")
             .error {{ errorMessage }}
         SubmitButton(:loading="isSaving") Save
+sui-overlay(ref="deleteSubdomainOverlay")
+    form.popup(@submit.prevent="deleteSubdomain" action="" :loading="isDisabled || null")
+        .title
+            Icon warning
+            div Deleting Subdomain?
+        .body 
+            p Are you sure you want to delete "{{ service.subdomain }}" permanently? #[br] All uploaded files will be deleted along with your subdomain. You will not be able to undo this action.
+            p To confirm deletion, enter Subdomain Name #[br] #[span(style="font-weight: bold") {{ service.subdomain }}]
+            sui-input(:placeholder="service.subdomain" :value="confirmationCode" @input="(e) => confirmationCode = e.target.value")
+        .foot
+            sui-button(type="button" @click="()=> { deleteSubdomainOverlay.close(); confirmationCode = ''}").textButton Cancel
+            SubmitButton(:loading="isDisabled" class="textButton" backgroundColor="51, 51, 51") Delete
+sui-overlay(ref="deleteErrorOverlay")
+    .popup
+        .title
+            Icon warning
+            div Something went wrong!
+        .body {{ deleteErrorMessage }}
+        .foot
+            sui-button.lineButton(type="button" @click="()=> { deleteErrorOverlay.close(); }") Ok
 </template>
 <!-- script below -->
 <script setup>
@@ -29,12 +51,18 @@ import Icon from '@/components/Icon.vue';
 let router = useRouter();
 let appStyle = inject('appStyle');
 let service = inject('service');
+const deleteSubdomainOverlay = ref(null);
+const deleteErrorOverlay = ref(null);
 const isSaving = ref(false);
+const isDisabled = ref(false);
+const isDeleting = ref(false);
 const errorFile = ref(service.value[404]);
+const confirmationCode= ref('');
+const deleteErrorMessage = ref('');
 const errorMessage = ref('');
 
-if (!service.value.subdomain) {
-    router.replace({ name: 'service' })
+if (!service.value.subdomain || service.value.subdomain[0] === '*') {
+    router.replace({'query': null});
 }
 
 watch(() => service.value[404], () => {
@@ -85,6 +113,73 @@ const save404 = () => {
         errorMessage.value = "File does not exist!"
         throw err;
     })
+}
+
+const deleteSubdomainAsk = () => {
+    if (!state.user.email_verified) return;
+    deleteSubdomainOverlay.value.open();
+}
+
+const deleteSubdomain = async () => {
+    isDisabled.value = true;
+    if (confirmationCode.value !== service.value.subdomain) {
+        confirmationCode.value = '';
+        deleteErrorMessage.value = "Your subdomain did not match.";
+        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+        deleteErrorOverlay.value.open();
+        isDisabled.value = false;
+        return;
+    }
+
+    try {
+        await skapi.registerSubdomain({
+            service: service.value.service,
+            subdomain: service.value.subdomain,
+            exec: 'remove'
+        }).then(() => {
+            isDeleting.value = true;
+            isDisabled.value = true;
+
+            skapi.getServices(service.value.service).then((res) => {
+                state.services = res;
+                service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+
+                if (service.value.subdomain && service.value.subdomain.includes('*')) {
+                    let time = 2000;
+
+                    let interval = setInterval(() => {
+                        skapi.getServices(service.value.service).then((res) => {
+                            state.services = res;
+                            service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+                            if (service.value.subdomain) {
+                                if (service.value.subdomain.includes('*')) {
+                                    isDeleting.value = true;
+                                    isDisabled.value = false;
+                                    time *= 2;
+                                } else {
+                                    isDeleting.value = false;
+                                    isDisabled.value = false;
+                                    clearInterval(interval);
+                                }
+                            }
+                        })
+                    }, time);
+                } else {
+                    isDeleting.value = false;
+                    isDisabled.value = false;
+                }
+            });
+
+            if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+        }).finally(() => {
+            router.replace({'query': null});
+        })
+    } catch (e) {
+        deleteErrorMessage.value = e.message;
+        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
+        deleteErrorOverlay.value.open();
+        isDisabled.value = false;
+    }
 }
 
 appStyle.background = '#333333';
@@ -147,6 +242,7 @@ onBeforeUnmount(() => {
     }
 
     .subdomain {
+        position: relative;
         text-align: left;
         margin-bottom: 16px;
 
@@ -158,6 +254,19 @@ onBeforeUnmount(() => {
         .value {
             font-style: italic;
             opacity: 0.5;
+        }
+
+        button {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background-color: transparent;
+            border: none;
+            padding: 0;
+
+            svg {
+                fill: #fff;
+            }
         }
     }
     .error {
