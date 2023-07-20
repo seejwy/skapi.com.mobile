@@ -129,14 +129,16 @@ provide('fetchingData', ref(false));
 
 
 const get404 = () => {
-    skapi.listHostDirectory({service: service.value.service, dir: '.cfacdb7c8270a90aba6011585793dfc3/*'}).then((res) => {
-        if(res.list.length) {
-            let path = res.list[0].name.split('/');
-            path.shift();
-            path.shift();
-            service.value[404] = path.join('/');
-        }
-    })
+    if(service.value.subdomain && service.value.subdomain[0] !== '*') {
+        skapi.listHostDirectory({service: service.value.service, dir: '.cfacdb7c8270a90aba6011585793dfc3/*'}).then((res) => {
+            if(res.list.length) {
+                let path = res.list[0].name.split('/');
+                path.shift();
+                path.shift();
+                service.value[404] = path.join('/');
+            }
+        })
+    }
 }
 
 onMounted(() => {
