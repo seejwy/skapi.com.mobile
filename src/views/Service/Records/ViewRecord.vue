@@ -75,20 +75,12 @@ NavBarProxy
 								.name
 									span.type File
 									span {{ key }}
-									template(v-if="props.record.table.access_group === 0")
-										a.value.file(v-for="file in record.files" :href="file.url" style="text-decoration: none;color: unset;")
-											Icon attached
-											span
-												.filename {{ file.filename }}
-												div(v-if="file.size" style="font-size: 12px;") {{ getSize(file.size) }}
-											Icon download
-									template(v-else)
-										a.value.file(v-for="file in record.files" @click="download(file.url)" style="text-decoration: none;color: unset; cursor: pointer;")
-											Icon attached
-											span
-												.filename {{ file.filename }}
-												div(v-if="file.size" style="font-size: 12px;") {{ getSize(file.size) }}
-											Icon download
+									a.value.file(v-for="file in record.files" @click="download(file.url)" style="text-decoration: none;color: unset; cursor: pointer;")
+										Icon attached
+										span
+											.filename {{ file.filename }}
+											div(v-if="file.size" style="font-size: 12px;") {{ getSize(file.size) }}
+										Icon download
 								.data-row(v-for="value in record.json")
 									.name
 										span.type(v-if="typeof value === 'object'") JSON
