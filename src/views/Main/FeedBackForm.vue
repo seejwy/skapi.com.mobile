@@ -169,7 +169,7 @@ const inputFeedback = () => {
             position: relative;
             z-index: 10;
             height: 51px;
-            background-image: url('/assets/img/icons/star-mobile.svg');
+            background-image: url('@/assets/img/icons/star-mobile.svg');
             background-size: contain;
             pointer-events: none;
         }

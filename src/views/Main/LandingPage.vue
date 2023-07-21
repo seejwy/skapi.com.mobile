@@ -461,7 +461,7 @@ main {
         &.signup {
             width: 100%;
             padding: 40px 20px;
-            background: url("src/assets/img/icons/Asset 33.png") no-repeat center;
+            background: url("@/assets/img/icons/Asset 33.png") no-repeat center;
             background-size: cover;
 
             .cont {
