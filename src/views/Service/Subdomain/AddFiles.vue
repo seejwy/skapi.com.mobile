@@ -266,7 +266,7 @@ const uploadFiles = async () => {
                                     // service.value.files[e.currentFile.name] = `https://${service.value.subdomain}.skapi.com/${e.currentFile.name}`
                                     saveToServiceFiles(e.currentFile);
                                     clearInterval(fileList.value[e.currentFile.name].interval);
-                                    interval = null;
+                                    fileList.value[e.currentFile.name].interval = null;
                                 }
                             } catch (e) {
                                 clearInterval(fileList.value[e.currentFile.name].interval);
