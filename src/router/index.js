@@ -86,6 +86,21 @@ const router = createRouter({
               component: EditFiles
             },
             {
+              path: 'subdomain',
+              children: [
+                {
+                  path: 'add',
+                  name: 'addSubdomain',
+                  component: ()=>import('@/views/Service/Subdomain/Subdomain.vue'),
+                },
+                {
+                  path: 'edit',
+                  name: 'editSubdomain',
+                  component: ()=>import('@/views/Service/Subdomain/EditSubdomain.vue')
+                },
+              ]
+            },
+            {
               path: 'records',
               component: RecordsMain,
               children: [

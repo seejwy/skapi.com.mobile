@@ -3,8 +3,6 @@ NavBarProxy(backgroundColor="#505050")
     template(v-slot:title)
         div Service: "{{ service.name }}"
 EditService(v-if="state?.user && route.query.edit === 'service'")
-Subdomain(v-else-if="state?.user && route.query.edit === 'subdomain'")
-EditSubdomain(v-else-if="state?.user && route.query.edit === 'editsubdomain'")
 template(v-else)
     .pageHeader.headSpaceHelper
         h2 Service
@@ -83,12 +81,14 @@ template(v-else)
                 Icon domain
                 h2 Subdomain 
             .actions(:class="{'disabled': !state.user.email_verified ? true : null}")
-                Icon(v-if="service.subdomain" @click="router.push('?edit=editsubdomain')") pencil
-                Icon(v-else @click="router.push('?edit=subdomain')") plus
+                button(v-if="service.subdomain" @click="router.push({name: 'editSubdomain'})" :disabled="service?.subdomain?.[0] === '*' ? true : null")
+                    Icon pencil
+                button(v-else @click="router.push({name: 'addSubdomain'})" :disabled="!state.user.email_verified ? true : null")
+                    Icon plus
         .innerContainer
             .domainGrid(v-if="!service.subdomain")
                 div No Domain Created
-            .domainGrid(v-else-if="!isDeleting")
+            .domainGrid(v-else-if="service?.subdomain?.[0] !== '*'")
                 .domainGridItem
                     .name
                         span Subdomain
@@ -117,18 +117,6 @@ sui-overlay(ref="deleteConfirmOverlay")
             sui-input(:placeholder="service.service" :value="confirmationCode" @input="(e) => confirmationCode = e.target.value")
         .foot
             sui-button(type="button" @click="()=> { deleteConfirmOverlay.close(); confirmationCode = ''}").textButton Cancel
-            SubmitButton(:loading="isDisabled" class="textButton" backgroundColor="51, 51, 51") Delete
-sui-overlay(ref="deleteSubdomainOverlay")
-    form.popup(@submit.prevent="deleteSubdomain" action="" :loading="isDisabled || null")
-        .title
-            Icon warning
-            div Deleting Subdomain?
-        .body 
-            p Are you sure you want to delete "{{ service.subdomain }}" permanently? #[br] All uploaded files will be deleted along with your subdomain. You will not be able to undo this action.
-            p To confirm deletion, enter Subdomain Name #[br] #[span(style="font-weight: bold") {{ service.subdomain }}]
-            sui-input(:placeholder="service.subdomain" :value="confirmationCode" @input="(e) => confirmationCode = e.target.value")
-        .foot
-            sui-button(type="button" @click="()=> { deleteSubdomainOverlay.close(); confirmationCode = ''}").textButton Cancel
             SubmitButton(:loading="isDisabled" class="textButton" backgroundColor="51, 51, 51") Delete
 sui-overlay(ref="deleteErrorOverlay")
     .popup
@@ -160,7 +148,6 @@ const router = useRouter();
 let service = inject('service');
 
 const deleteConfirmOverlay = ref(null);
-const deleteSubdomainOverlay = ref(null);
 const deleteErrorOverlay = ref(null);
 const confirmationCode = ref('');
 const deleteErrorMessage = ref('');
@@ -299,11 +286,6 @@ const deleteServiceAsk = () => {
     deleteConfirmOverlay.value.open();
 }
 
-const deleteSubdomainAsk = () => {
-    if (!state.user.email_verified) return;
-    deleteSubdomainOverlay.value.open();
-}
-
 const onDrop = (event) => {
     const readEntriesAsync = (item) => {
         let reader = item.createReader();
@@ -365,65 +347,21 @@ const deleteService = () => {
     });
 }
 
-const deleteSubdomain = async () => {
-    isDisabled.value = true;
-    if (confirmationCode.value !== service.value.subdomain) {
-        confirmationCode.value = '';
-        deleteErrorMessage.value = "Your subdomain did not match.";
-        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
-        deleteErrorOverlay.value.open();
-        isDisabled.value = false;
-        return;
+onMounted(async () => {
+    let time = 1000;
+    async function pause() {
+        // Simulating an asynchronous operation with setTimeout
+        return new Promise((resolve) => setTimeout(() => resolve("Data"), time));
     }
 
-    try {
-        await skapi.registerSubdomain({
-            service: service.value.service,
-            subdomain: service.value.subdomain,
-            exec: 'remove'
-        }).then(() => {
-            isDeleting.value = true;
-            isDisabled.value = true;
-
-            skapi.getServices(service.value.service).then((res) => {
-                state.services = res;
-                service.value = res[service.value.region].find(serv => serv.service === service.value.service);
-
-                if (service.value.subdomain && service.value.subdomain.includes('*')) {
-                    let time = 2000;
-
-                    let interval = setInterval(() => {
-                        skapi.getServices(service.value.service).then((res) => {
-                            state.services = res;
-                            service.value = res[service.value.region].find(serv => serv.service === service.value.service);
-                            if (service.value.subdomain) {
-                                if (service.value.subdomain.includes('*')) {
-                                    isDeleting.value = true;
-                                    isDisabled.value = false;
-                                    time *= 2;
-                                } else {
-                                    isDeleting.value = false;
-                                    isDisabled.value = false;
-                                    clearInterval(interval);
-                                }
-                            }
-                        })
-                    }, time);
-                } else {
-                    isDeleting.value = false;
-                    isDisabled.value = false;
-                }
-            });
-
-            if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
-        })
-    } catch (e) {
-        deleteErrorMessage.value = e.message;
-        if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
-        deleteErrorOverlay.value.open();
-        isDisabled.value = false;
+    while(route.name === 'service' && service.value.subdomain && service.value.subdomain?.[0] === '*') {
+        let res = await skapi.getServices(service.value.service);
+        state.services = res;
+        service.value = res[service.value.region].find(serv => serv.service === service.value.service);
+        await pause();
+        time*=2;
     }
-}
+})
 
 if (!service.value.hasOwnProperty('storage')) {
     skapi.storageInformation(service.value.service).then((storage) => {
@@ -512,6 +450,26 @@ if (!service.value.hasOwnProperty('storage')) {
 
         &.disabled {
             opacity: 0.4;
+        }
+
+        button {
+            background-color: transparent;
+            margin-right: 4px;
+            border: none;
+            height: 24px;
+            width: 24px;
+            padding: 0;
+            cursor: pointer;
+
+            &[disabled] {
+                opacity: 0.5;
+            }
+            
+            svg {
+                fill: #fff;
+                height: 24px;
+                width: 24px;
+            }
         }
     }
 
@@ -777,7 +735,6 @@ sui-tooltip {
     &.deleting {
         text-align: center;
         color: rgba(255, 255, 255, 0.4);
-        padding-bottom: 30px;
 
         h3 {
             font-size: 28px;

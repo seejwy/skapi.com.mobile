@@ -62,7 +62,7 @@ const deleteErrorMessage = ref('');
 const errorMessage = ref('');
 
 if (!service.value.subdomain || service.value.subdomain[0] === '*') {
-    router.replace({'query': null});
+    router.replace({name: 'service'});
 }
 
 watch(() => service.value[404], () => {
@@ -98,14 +98,12 @@ const save404 = () => {
                     if(e.progress === 100) {                 
                         service.value[404] = errorFile.value;
                         isSaving.value = false;
-                        router.replace({name: 'service'});
                     }
                 }
             });
         } else {
             delete service.value[404];
             isSaving.value = false;
-            router.replace({name: 'service'});
         }
     }).catch((err) => {
         console.log(err);
@@ -140,39 +138,12 @@ const deleteSubdomain = async () => {
             isDeleting.value = true;
             isDisabled.value = true;
 
-            skapi.getServices(service.value.service).then((res) => {
-                state.services = res;
-                service.value = res[service.value.region].find(serv => serv.service === service.value.service);
-
-                if (service.value.subdomain && service.value.subdomain.includes('*')) {
-                    let time = 2000;
-
-                    let interval = setInterval(() => {
-                        skapi.getServices(service.value.service).then((res) => {
-                            state.services = res;
-                            service.value = res[service.value.region].find(serv => serv.service === service.value.service);
-                            if (service.value.subdomain) {
-                                if (service.value.subdomain.includes('*')) {
-                                    isDeleting.value = true;
-                                    isDisabled.value = false;
-                                    time *= 2;
-                                } else {
-                                    isDeleting.value = false;
-                                    isDisabled.value = false;
-                                    clearInterval(interval);
-                                }
-                            }
-                        })
-                    }, time);
-                } else {
-                    isDeleting.value = false;
-                    isDisabled.value = false;
-                }
-            });
+            let index = state.services[service.value.region].findIndex(serv => serv.service === service.value.service);
+            state.services[service.value.region][index].subdomain = `*${service.value.subdomain}`;
 
             if (deleteSubdomainOverlay.value) deleteSubdomainOverlay.value.close();
         }).finally(() => {
-            router.replace({'query': null});
+            router.replace({name: 'service'});
         })
     } catch (e) {
         deleteErrorMessage.value = e.message;
