@@ -38,13 +38,36 @@ watch(() => route.name, () => {
 
 async function toParent() {
     await state.blockingPromise;
+
+    let hasQuery = false;
     
-    if(!!Object.keys(route.query).length) {
+    for(const key in route.query) {
+        hasQuery = true;
+        break;
+    }
+
+    if(hasQuery) {
         router.replace({query: null});
     } else {
-        let path = route.fullPath.split('/');
-        path.pop();
-        router.push(path.join('/'));
+        let next;
+        let history = [...route.matched];
+
+        let current = history.pop();
+        
+        for(const record of history.reverse()) {
+            if(record.path !== current.path) {
+                if(record.components) {
+                    next = record.path;
+                }
+            }
+        }
+
+        if(!next) {
+            router.push({path: history[history.length - 1].path});
+        } else {
+            let path = router.resolve(next);
+            router.push({name: path.matched[path.matched.length - 1].name});
+        }
     }
 }
 
