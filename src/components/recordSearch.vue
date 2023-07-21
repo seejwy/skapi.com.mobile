@@ -453,16 +453,6 @@ form {
         display: flex;
         flex-grow: 1;
         align-items: center;
-
-        input::placeholder {
-            background-image: url(/src/assets/img/icons/search.svg);
-            background-size: 20px;
-            background-position: 10px center;
-            background-repeat: no-repeat;
-        }
-        input::-webkit-input-placeholder {
-            background-position: 0 center;
-        }
     }
 
     .lineButton {
