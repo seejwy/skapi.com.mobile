@@ -45,9 +45,10 @@ let router = useRouter();
 const error = ref(null);
 const rememberMe = ref(window.localStorage.getItem('remember') === 'true');
 const promiseRunning = ref(false);
-
+const isAdmin = ref(false);
 onMounted(() => {
     if (document.body.classList.contains('admin')) {
+        isAdmin.value = true;
         document.body.classList.remove('admin');
     }
 });
@@ -134,6 +135,7 @@ function login() {
 
         } else {
             state.user = user;
+            if(isAdmin.value) document.body.classList.add('admin');
         }
     }).catch(e => {
         // UserLambdaValidationException
