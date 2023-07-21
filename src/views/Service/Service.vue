@@ -2,110 +2,108 @@
 NavBarProxy(backgroundColor="#505050")
     template(v-slot:title)
         div Service: "{{ service.name }}"
-EditService(v-if="state?.user && route.query.edit === 'service'")
-template(v-else)
-    .pageHeader.headSpaceHelper
-        h2 Service
-        p.
-            A service is a collection of serverless resources working together to form your backend.
-            Simply connect to your service and start building your website.      
+.pageHeader.headSpaceHelper
+    h2 Service
+    p.
+        A service is a collection of serverless resources working together to form your backend.
+        Simply connect to your service and start building your website.      
 
-        div.action
-            a(href="https://docs.skapi.com/getting-started/" target="_blank")
-                sui-button.lineButton(type="button") Find out More
-    .container
-        .titleActionsWrapper
-            .titleWrapper
-                Icon information
-                h2 Service Information
-            .actions(@click="deleteServiceAsk" :class="{'disabled': !state.user.email_verified ? true : null}")
-                Icon trash
-        .innerContainer 
-            .informationGrid
-                .informationGridItem(v-for="info in informationGrid" :class="[info.span ? `span-${info?.span}` : '']")
-                    .name {{ info.name }}
-                    .value(v-if="info.filter") {{ info.filter(service[info.key]) }}
-                    .value(v-else) {{ service[info.key] }}
+    div.action
+        a(href="https://docs.skapi.com/getting-started/" target="_blank")
+            sui-button.lineButton(type="button") Find out More
+.container
+    .titleActionsWrapper
+        .titleWrapper
+            Icon information
+            h2 Service Information
+        .actions(@click="deleteServiceAsk" :class="{'disabled': !state.user.email_verified ? true : null}")
+            Icon trash
+    .innerContainer 
+        .informationGrid
+            .informationGridItem(v-for="info in informationGrid" :class="[info.span ? `span-${info?.span}` : '']")
+                .name {{ info.name }}
+                .value(v-if="info.filter") {{ info.filter(service[info.key]) }}
+                .value(v-else) {{ service[info.key] }}
 
-    .container
-        .titleActionsWrapper
-            .titleWrapper
-                Icon setting
-                h2 Service Setting 
-            .actions(@click="edit" :class="{'disabled': !state.user.email_verified ? true : null}")
+.container
+    .titleActionsWrapper
+        .titleWrapper
+            Icon setting
+            h2 Service Setting 
+        .actions(@click="edit" :class="{'disabled': !state.user.email_verified ? true : null}")
+            Icon pencil
+    .innerContainer
+        .settingGrid 
+            .settingGridItem(v-for="setting in settingGrid")
+                .name 
+                    span {{ setting.name }}
+                    sui-tooltip(v-if="setting.tip")
+                        Icon(slot="tool") question
+                        div(slot="tip") {{ setting.tip }}
+                .value(v-if="setting.key === 'active'")
+                    .indicator(:class="{'active': service[setting.key] > 0}")
+                    span(v-if="service[setting.key] > 0") Enabled 
+                    span(v-else) Disabled
+                .value(v-else) {{  service[setting.key] || '-' }}
+.container
+    .titleActionsWrapper
+        .titleWrapper
+            h2 Manage your Service 
+    .innerContainer.services
+        .serviceGrid 
+            RouterLink(:to="{name: 'users'}").serviceGridItem
+                .content
+                    .title
+                        Icon users
+                        span Users
+                    .body Within your service, users are individuals who have successfully created an account and logged in at least once. You can search for and apply access control using our easy to use user database management system.
+                .goto Go to Users >
+            RouterLink(:to="{name: 'records'}").serviceGridItem  
+                .content
+                    .title
+                        Icon folder_open
+                        span Record
+                    .body Records are data objects created by you or your users and stored within your database. You can efficiently search, modify, or create new records using our database management system.
+                .goto Go to Records >
+            //- RouterLink(to="/").serviceGridItem 
+                .content
+                    .title
+                        Icon mail
+                        span Email System
+                    .body Users are data that your service user's will store and read from your service database. 
+                .goto Go to Mail >
+
+.container
+    .titleActionsWrapper
+        .titleWrapper
+            Icon domain
+            h2 Subdomain 
+        .actions(:class="{'disabled': !state.user.email_verified ? true : null}")
+            button(v-if="service.subdomain" @click="router.push({name: 'editSubdomain'})" :disabled="service?.subdomain?.[0] === '*' ? true : null")
                 Icon pencil
-        .innerContainer
-            .settingGrid 
-                .settingGridItem(v-for="setting in settingGrid")
-                    .name 
-                        span {{ setting.name }}
-                        sui-tooltip(v-if="setting.tip")
-                            Icon(slot="tool") question
-                            div(slot="tip") {{ setting.tip }}
-                    .value(v-if="setting.key === 'active'")
-                        .indicator(:class="{'active': service[setting.key] > 0}")
-                        span(v-if="service[setting.key] > 0") Enabled 
-                        span(v-else) Disabled
-                    .value(v-else) {{  service[setting.key] || '-' }}
-    .container
-        .titleActionsWrapper
-            .titleWrapper
-                h2 Manage your Service 
-        .innerContainer.services
-            .serviceGrid 
-                RouterLink(:to="{name: 'users'}").serviceGridItem
-                    .content
-                        .title
-                            Icon users
-                            span Users
-                        .body Within your service, users are individuals who have successfully created an account and logged in at least once. You can search for and apply access control using our easy to use user database management system.
-                    .goto Go to Users >
-                RouterLink(:to="{name: 'records'}").serviceGridItem  
-                    .content
-                        .title
-                            Icon folder_open
-                            span Record
-                        .body Records are data objects created by you or your users and stored within your database. You can efficiently search, modify, or create new records using our database management system.
-                    .goto Go to Records >
-                //- RouterLink(to="/").serviceGridItem 
-                    .content
-                        .title
-                            Icon mail
-                            span Email System
-                        .body Users are data that your service user's will store and read from your service database. 
-                    .goto Go to Mail >
-    
-    .container
-        .titleActionsWrapper
-            .titleWrapper
-                Icon domain
-                h2 Subdomain 
-            .actions(:class="{'disabled': !state.user.email_verified ? true : null}")
-                button(v-if="service.subdomain" @click="router.push({name: 'editSubdomain'})" :disabled="service?.subdomain?.[0] === '*' ? true : null")
-                    Icon pencil
-                button(v-else @click="router.push({name: 'addSubdomain'})" :disabled="!state.user.email_verified ? true : null")
-                    Icon plus
-        .innerContainer
-            .domainGrid(v-if="!service.subdomain")
-                div No Domain Created
-            .domainGrid(v-else-if="service?.subdomain?.[0] !== '*'")
-                .domainGridItem
-                    .name
-                        span Subdomain
-                    .value
-                        span {{ service.subdomain }}.skapi.com
-                    a(:href="`https://${service.subdomain}.skapi.com`" target="_blank")
-                        Icon link
-                .actions(@click="editFiles") 
-                    Icon file
-                    div Manage Files
+            button(v-else @click="router.push({name: 'addSubdomain'})" :disabled="!state.user.email_verified ? true : null")
+                Icon plus
+    .innerContainer
+        .domainGrid(v-if="!service.subdomain")
+            div No Domain Created
+        .domainGrid(v-else-if="service?.subdomain?.[0] !== '*'")
+            .domainGridItem
+                .name
+                    span Subdomain
+                .value
+                    span {{ service.subdomain }}.skapi.com
+                a(:href="`https://${service.subdomain}.skapi.com`" target="_blank")
+                    Icon link
+            .actions(@click="editFiles") 
+                Icon file
+                div Manage Files
 
-                .actions(@click="refreshCDN") 
-                    Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
-                    div Refresh CDN
-            .domainGrid.deleting(v-else) 
-                h3 Deleting subdomain ...
-                span It may take a few minutes for a subdomain to be deleted.
+            .actions(@click="refreshCDN") 
+                Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
+                div Refresh CDN
+        .domainGrid.deleting(v-else) 
+            h3 Deleting subdomain ...
+            span It may take a few minutes for a subdomain to be deleted.
 sui-overlay(ref="deleteConfirmOverlay")
     form.popup(@submit.prevent="deleteService" action="" :loading="isDisabled || null")
         .title
@@ -134,9 +132,6 @@ import { localeName, dateFormat, getSize } from '@/helper/common';
 import { useRoute, useRouter } from 'vue-router';
 
 import NavBarProxy from '@/components/NavBarProxy.vue';
-import EditService from '@/views/Service/EditService.vue';
-import Subdomain from '@/views/Service/Subdomain/Subdomain.vue';
-import EditSubdomain from '@/views/Service/Subdomain/EditSubdomain.vue';
 import EditFiles from '@/views/Service/Subdomain/EditFiles.vue';
 import AddFiles from '@/views/Service/Subdomain/AddFiles.vue';
 import Icon from '@/components/Icon.vue';
@@ -273,7 +268,7 @@ const uploadFiles = () => {
 
 const edit = () => {
     if (!state.user.email_verified) return false;
-    router.push('?edit=service');
+    router.push({name: 'serviceSetting'});
 }
 
 const editFiles = () => {

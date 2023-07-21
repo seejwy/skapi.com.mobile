@@ -81,6 +81,11 @@ const router = createRouter({
               component: Service
             },
             {
+              path: 'setting',
+              name: 'serviceSetting',
+              component: ()=>import('@/views/Service/EditService.vue'),
+            },
+            {
               path: 'files/:folders*',
               name: 'files',
               component: EditFiles

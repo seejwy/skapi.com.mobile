@@ -123,7 +123,7 @@ const save = async () => {
         service.value.cors === cors.value &&
         service.value.api_key === apiKey.value
     ) {
-        router.replace({query: null});
+        router.replace({name: 'service'});
         return;
     }
 
@@ -153,7 +153,7 @@ const saveFunction = async () => {
         isDisabled.value = false;
     }
         
-    router.replace({query: null});
+    router.replace({name: 'service'});
     
     return res;
 }
