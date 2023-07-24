@@ -201,8 +201,12 @@ const uploadFiles = async () => {
             }
             return false;
         }
-
-        directory.list.push(fileObj);
+        let binaryIndex = binarySearch(fileObj);
+        if(binaryIndex >= 0) {
+            directory.list[binaryIndex] = fileObj;
+        } else {        
+            directory.list.push(fileObj);
+        }
         // if (directory.endOfList) {
             // let index = binarySearch(fileObj);
             // if (directory.list[index]?.name === fileObj.name) {
@@ -225,6 +229,25 @@ const uploadFiles = async () => {
         //         directory.list[index] = fileObj;
         //     }
         // }
+
+        function binarySearch(fileObj) {
+            let left = 0;
+            let right = directory.list.length - 1;
+
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+
+                if (directory.list[mid].name === fileObj.name) {
+                return mid;
+                } else if (directory.list[mid].name < fileObj.name) {
+                left = mid + 1;
+                } else {
+                right = mid - 1;
+                }
+            }
+
+            return -1;
+        }
     }
 
     let formData = new FormData();
