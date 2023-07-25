@@ -30,13 +30,12 @@ if(desktopSize.matches || !isMobileDevice) {
     // init skapi
     skapi = new Admin();
     
-    awaitConnection = skapi.getConnection().then(c => {
+    awaitConnection = skapi.__connection.then(c => {
         state.connection = c;
         state.user = skapi.user;
     });
 
     skapi.getProfile({ refreshToken: true }).then(u => {
-        state.connection = skapi.connection;
         state.user = u;
     }).catch(err => err);
     
