@@ -238,9 +238,7 @@ const refreshCDN = () => {
             subdomain: service.value.subdomain
         }).catch((e) => {
             console.log({e});
-        }).finally(()=> {
-            isCDNRefreshing.value = false
-        }); 
+        })
     }
 }
 const addFileButtonHandler = () => {

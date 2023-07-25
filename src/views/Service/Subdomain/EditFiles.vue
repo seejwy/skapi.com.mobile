@@ -33,7 +33,7 @@ template(v-else)
                         .file(:class="{fade: isDeleting && selectedFiles.includes(service.subdomain + currentDirectory + file.name)}")
                             sui-input(type="checkbox" :checked="selectedFiles.includes(service.subdomain + currentDirectory + file.name) || null" @change="checkboxHandler" :value="file.name")
                             Icon file
-                            a(:href="`https://${service.subdomain}.skapi.com${currentDirectory}${file.name}`" download).path-wrapper
+                            .path-wrapper(@click="download(`https://${service.subdomain}.skapi.com${currentDirectory}${file.name}`)")
                                 span.path {{ file.name }}
                 template(v-if="isFetching")
                     .fileWrapper.animation-skeleton(v-for="i in 10")
@@ -111,6 +111,17 @@ const checkboxHandler = (e) => {
     } else {
         selectedFiles.value.splice(selectedFiles.value.indexOf(`${service.value.subdomain}/${e.target.value}`), 1);
     }
+}
+
+const download = async (url) => {
+    let file = await skapi.getFile(
+        url,
+        {
+            dataType: 'download',
+            noCdn: true,
+            service: service.value.service
+        }
+    );
 }
 
 const deleteFiles = () => {

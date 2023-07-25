@@ -422,6 +422,10 @@ main {
                         display: flex;
                         padding: 40px 60px 60px 65px;
 
+                        code {
+                            -webkit-text-size-adjust: 100%;
+                        }
+
                         span {
                             color: #7C8CFF;
                         }

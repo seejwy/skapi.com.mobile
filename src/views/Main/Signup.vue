@@ -33,7 +33,7 @@
                             @input="(e)=> form.subscribe = e.target.checked"
                             checked)
                         span I agree to receive information and news letters from Skapi via Email.
-                SubmitButton Continue
+                SubmitButton(:disabled="error || null") Continue
         template(v-if="step >= 2")
             form(@submit.prevent="signup" action="")
                 h1 Tell Us More
