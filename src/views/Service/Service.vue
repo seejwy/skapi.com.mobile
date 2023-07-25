@@ -100,10 +100,15 @@ NavBarProxy(backgroundColor="#505050")
 
             .actions(@click="refreshCDN") 
                 Icon(:class="{'animationRotation': isCDNRefreshing}") refresh
-                div Refresh CDN
+                div 
+                    template(v-if="isCDNRefreshing") Refreshing...
+                    template(v-else) Refresh CDN
         .domainGrid.deleting(v-else) 
             h3 Deleting subdomain ...
             span It may take a few minutes for a subdomain to be deleted.
+        Teleport(to="#appMain")
+            Transition
+                .cdnMessage(v-if="isCDNRefreshing && refreshCDNMessage") {{ refreshCDNMessage }} 
 sui-overlay(ref="deleteConfirmOverlay")
     form.popup(@submit.prevent="deleteService" action="" :loading="isDisabled || null")
         .title
@@ -154,6 +159,7 @@ const isCDNRefreshing = ref(false);
 const fileList = reactive({});
 const fileUpload = ref(null);
 const folderUpload = ref(null);
+const refreshCDNMessage = ref('');
 
 const informationGrid = reactive([
     {
@@ -236,8 +242,16 @@ const refreshCDN = () => {
         skapi.refreshCDN({
             service: service.value.service,
             subdomain: service.value.subdomain
+        }).then(() => {
+            refreshCDNMessage.value = "Refreshing CDN. It could take up to 5 minutes."
         }).catch((e) => {
             console.log({e});
+            refreshCDNMessage.value = "CDN is still in queue or refreshing."
+        }).finally(() => {
+            setTimeout(() => {
+                isCDNRefreshing.value = false;
+                refreshCDNMessage.value = "";
+            }, 5000)
         })
     }
 }
@@ -830,4 +844,25 @@ sui-tooltip {
     text-overflow: ellipsis;
     direction: rtl;
     text-align: left;
-}</style>
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+.cdnMessage {
+    position: fixed;
+    bottom: 68px;
+    padding: 16px;
+    margin: 16px 0 0 0;
+    background-color: rgba(0,0,0, 0.6);
+    border-radius: 8px;
+    left: 8px;
+    right: 8px;
+}
+</style>
