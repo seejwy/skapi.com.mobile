@@ -43,8 +43,8 @@ NavBarProxy
                     th(style="width: 52px;") Block
                     th(:class="{'iconTd': key === 'block' || key === 'status', 'userId': key === 'user_id'}") {{ visibleFields[mobileVisibleField].text }}
             tbody(v-if="serviceUsers?.list?.length")
-                template(v-for="user in serviceUsers.list" :key="user['user_id']" :id="user['user_id']")
-                    tr(v-if="userStatus[user.user_id] !== 'deleted'")
+                template(v-for="user in serviceUsers.list" :key="user['user_id']")
+                    tr(v-if="userStatus[user.user_id] !== 'deleted'" :id="user['user_id']")
                         td
                             sui-input(type="checkbox" :disabled="promiseRunning || null" :value="user.user_id" :checked="selectedUsers.includes(user.user_id) || null" @change="userSelectionHandler")
                         td(style="width: 52px;")
