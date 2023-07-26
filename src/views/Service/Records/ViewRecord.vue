@@ -251,7 +251,7 @@ NavBarProxy
 								span
 									.filename {{ file.name || file.filename }}
 									div(v-if="file.size" style="font-size: 12px;") {{ getSize(file.size) }}
-								Icon.remove(@click="() => { isSaving ? null : record.data.splice(index, 1); }") X
+								Icon.remove(@click="removeFile(record, index)") X
 					template(v-else-if="record.type === 'json'")
 						JsonInput(
 							placeholder="Key Value"
@@ -519,35 +519,10 @@ const deleteRecord = () => {
 	view.value = 'information';
 }
 
-const saveData = async () => {
-	try {
-		let res = await save();
-		if (res) {
-			router.replace({
-				name: 'mobileRecordView',
-				query: {
-					id: res.record_id
-				}
-			});
-
-			return res;
-		} else {
-			return false;
-		}
-	} catch (e) {
-		console.log({ e });
-		fileError.value = e.message;
-
-		if (e.code === 'NOT_EXISTS') {
-			view.value = 'information';
-			await nextTick();
-			referenceIdField.value.querySelector('input').setCustomValidity('Reference ID is invalid');
-			referenceIdField.value.querySelector('input').reportValidity();
-		}
-		if (e?.name === 'NO_FILE') {
-			fileError.value = e.message;
-		}
-	}
+const removeFile = (record, index) => {
+	if(isSaving.value) return false;
+	record.data.splice(index, 1);
+	if(!record.data.length) record.data = "";
 }
 
 const save = async () => {
@@ -759,6 +734,18 @@ const save = async () => {
 		return r;
 	} catch (e) {
 		// do some error message
+		
+		fileError.value = e.message;
+
+		if (e.code === 'NOT_EXISTS') {
+			view.value = 'information';
+			await nextTick();
+			referenceIdField.value.querySelector('input').setCustomValidity('Reference ID is invalid');
+			referenceIdField.value.querySelector('input').reportValidity();
+		}
+		if (e?.name === 'NO_FILE') {
+			fileError.value = e.message;
+		}
 		console.log({ e });
 		isSaving.value = false;
 		throw e;
@@ -918,8 +905,7 @@ onMounted(() => {
 
 defineExpose({
 	close,
-	editRecord,
-	saveData
+	editRecord
 });
 </script>
 <style lang="less" scoped>
