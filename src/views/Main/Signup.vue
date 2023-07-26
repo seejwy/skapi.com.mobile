@@ -155,7 +155,7 @@ const validateEmail = (event) => {
 
 const validatePassword = () => {
     if (form.password.length < 6 || form.password.length > 60) {
-        passwordField.value.setError('Invalid Password');
+        passwordField.value.setError('Min 6 characters and Max 60 characters');
     } else if (form.password_confirm !== form.password) {
         confirmPasswordField.value.setError('Password does not match');
     } else {
