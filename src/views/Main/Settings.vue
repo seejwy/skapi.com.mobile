@@ -40,7 +40,8 @@ div(v-else-if="state?.user" :loading="isSaving || null")
                         sui-input(type="checkbox" :disabled="state.user.email_verified ? null : true" :checked="settings.email_subscription ? true : null" @change="(e) => settings.email_subscription = e.target.checked")
                         span I agree to receive information and news letters from Skapi via Email.
                 template(v-else)
-                    template(v-if="settings.email_subscription") Subscribed
+                    template(v-if="settings.email_subscription === ''") -
+                    template(v-else-if="settings.email_subscription") Subscribed
                     template(v-else) Not Subscribed
                 .actions(v-if="settings.email_subscription.isEdit")
                     span.cancel(@click="settings.email_subscription.isEdit = false") Cancel
