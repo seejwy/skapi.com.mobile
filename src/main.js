@@ -5,7 +5,7 @@ import Admin from './admin';
 import('@/assets/main.less');
 
 
-let awaitConnection, skapi, state;
+let awaitConnection, skapi, state, log;
 let desktopMedia = '(min-width: 769px)';
 const desktopSize = window.matchMedia(desktopMedia);
 const isMobileDevice = /Mobile|Android|iPhone|iPad|Windows Phone/i.test(navigator.userAgent);
@@ -83,7 +83,7 @@ if(desktopSize.matches || !isMobileDevice) {
     
     })
     
-    const log = v => { console.log(v); return v; };
+    log = v => { console.log(v); return v; };
 }
 
-export { skapi, state, awaitConnection };
+export { skapi, state, awaitConnection, log };
