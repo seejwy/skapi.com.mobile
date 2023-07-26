@@ -109,6 +109,7 @@ const addFiles = (event) => {
 const deleteFiles = () => {
     for (let file of selectedFiles.value) {
         delete fileList.value[file]
+        filesToUpload.value--;
     }
 
     selectedFiles.value = []
