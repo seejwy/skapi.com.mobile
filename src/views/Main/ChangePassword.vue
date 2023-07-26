@@ -33,6 +33,7 @@ NavBarProxy
             .input
                 label New Password
                 PasswordInput(
+                    ref="newPasswordField"
                     @input="(e) => { password.new.value = e.target.value; e.target.setCustomValidity(''); }" 
                     :value="password.new.value" 
                     @change="validatePassword"
@@ -80,6 +81,7 @@ const route = useRoute();
 const emit = defineEmits(['close']);
 const processStep = ref(0);
 const currentPasswordField = ref(null);
+const newPasswordField = ref(null);
 const newPasswordConfirmField = ref(null);
 const password = ref({
     current: {
@@ -108,13 +110,19 @@ const closePasswordChange = () => {
 }
 
 const validatePassword = () => {
-    if(password.value.current.value.length < 6 || password.value.current.value.length > 60) {
-		currentPasswordField.value.setError('Min 6 characters and Max 60 characters');
-    } else if(password.value.new.value !== password.value.confirm.value) {
-        newPasswordConfirmField.value.setError('Password does not match');
+    if(processStep.value === 0) {
+        if(password.value.current.value.length < 6 || password.value.current.value.length > 60) {
+            currentPasswordField.value.setError('Min 6 characters and Max 60 characters');
+        }
     } else {
-        if(currentPasswordField.value) currentPasswordField.value.clearError();
-        if(newPasswordConfirmField.value) newPasswordConfirmField.value.clearError();
+        if(password.value.new.value.length < 6 || password.value.new.value.length > 60) {
+            newPasswordField.value.setError('Min 6 characters and Max 60 characters');
+        } else if(password.value.new.value !== password.value.confirm.value) {
+            newPasswordConfirmField.value.setError('Password does not match');
+        } else {
+            if(currentPasswordField.value) currentPasswordField.value.clearError();
+            if(newPasswordConfirmField.value) newPasswordConfirmField.value.clearError();
+        }
     }
 }
 
