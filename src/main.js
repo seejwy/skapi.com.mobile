@@ -10,8 +10,14 @@ let desktopMedia = '(min-width: 769px)';
 const desktopSize = window.matchMedia(desktopMedia);
 const isMobileDevice = /Mobile|Android|iPhone|iPad|Windows Phone/i.test(navigator.userAgent);
 
-if(desktopSize.matches || !isMobileDevice) {
-    window.location.href = 'http://localhost:5174' + window.location.pathname;
+let domain = window.location.host.split('.')
+
+if(domain[0] === 'm' && (desktopSize.matches || !isMobileDevice)) {
+    domain[0] = 'www';
+    window.location.href = 'http://' + domain.join('.') + window.location.pathname;
+} else if (domain[0] === 'www' && (!desktopSize.matches && isMobileDevice)) {
+    domain[0] = 'm';
+    window.location.href = 'http://' + domain.join('.') + window.location.pathname;
 } else {
     // init state
     state = reactive({
