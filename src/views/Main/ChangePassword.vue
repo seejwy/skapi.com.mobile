@@ -112,7 +112,7 @@ const closePasswordChange = () => {
 const validatePassword = () => {
     if(processStep.value === 0) {
         if(password.value.current.value.length < 6 || password.value.current.value.length > 60) {
-            currentPasswordField.value.setError('Min 6 characters and Max 60 characters');
+            currentPasswordField.value.setError('Password is incorrect');
         }
     } else {
         if(password.value.new.value.length < 6 || password.value.new.value.length > 60) {
