@@ -46,7 +46,7 @@ export default class Admin extends Skapi {
     };
 
     constructor(service_id = 'us31zettahertzesskpi', owner = 'skapi') {
-        super(service_id, owner, { autoLogin: window.localStorage.getItem('remember') === 'true' });
+        super(service_id, owner, { autoLogin: window.localStorage.getItem('forgetme') === 'false' });
     }
 
     static async connect(service_id = 'us31zettahertzesskpi', owner = 'skapi') {
@@ -55,12 +55,12 @@ export default class Admin extends Skapi {
         return skapi;
     }
 
-    async AdminLogin(form, option, remember) {
-        if (remember) {
-            window.localStorage.setItem('remember', 'true');
+    async AdminLogin(form, option, forgetme) {
+        if (forgetme) {
+            window.localStorage.setItem('forgetme', 'true');
         }
         else {
-            window.localStorage.setItem('remember', 'false');
+            window.localStorage.setItem('forgetme', 'false');
         }
         return this.login(form, option);
     }

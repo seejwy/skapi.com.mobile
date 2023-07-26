@@ -18,8 +18,8 @@ form.container.login(@submit.prevent="login" action="" :loading="promiseRunning 
     .action
         label
             sui-input(type="checkbox" 
-                @input="(e)=>rememberMe = e.target.checked"
-                :checked="rememberMe ? true : null")
+                @change="(e)=>forgetme = !e.target.checked"
+                :checked="!forgetme ? true : false")
             span Stay logged in
         RouterLink(:to="{name: 'forgotpassword'}") Forgot Email & Password?
     .error(v-if="error")
@@ -43,7 +43,7 @@ import PasswordInput from '@/components/PasswordInput.vue';
 let route = useRoute();
 let router = useRouter();
 const error = ref(null);
-const rememberMe = ref(window.localStorage.getItem('remember') === 'true');
+const forgetme = ref(false);
 const promiseRunning = ref(false);
 const isAdmin = ref(false);
 onMounted(() => {
@@ -87,7 +87,7 @@ const validatePassword = (event) => {
 function login() {
     error.value = '';
     promiseRunning.value = true;
-    skapi.AdminLogin(form, null, rememberMe.value).then(async user => {
+    skapi.AdminLogin(form, null, forgetme.value).then(async user => {
         if (user.hasOwnProperty('misc') && user.misc && user.misc !== 'feedback complete') {
             let questions = null;
 
