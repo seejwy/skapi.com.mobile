@@ -5,9 +5,9 @@ NavBarProxy
     template(v-slot:rightButton)
         div(style="position: relative; width: 28px; height: 28px;" v-if="isDisabled")
             LoadingCircle(style="--bgColor: 80, 80, 80; --ringColor: 250, 250, 250;")
-        span(v-else @click="save" style="font-weight: bold; cursor: pointer") Save
+        input(v-else type="submit" form="form" style="font-weight: bold; cursor: pointer" value="Save")
 .overlay-container(v-if="service" :loading="isDisabled || null")
-    form(@submit.prevent="save" @keydown.enter.prevent="" action="")
+    form#form(@submit.prevent="save" @keydown.enter.prevent="" action="")
         .toggle(style="margin-bottom: 40px")
             span Enable/Disable
             .toggleBar 
@@ -149,6 +149,8 @@ const saveFunction = async () => {
         service.value.name = serviceName.value;
         service.value.cors = cors.value;
         service.value.api_key = apiKey.value;
+    } catch (e) {
+        console.log({e})
     } finally {
         isDisabled.value = false;
     }
