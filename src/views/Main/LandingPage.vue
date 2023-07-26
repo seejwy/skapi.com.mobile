@@ -60,7 +60,7 @@ section#section.features
 
 section#section.start(ref="startSection")
     .container 
-        h5 SDKS
+        h5 Getting Started
         h4 Import Skapi, and start building
         .startWrap
             .steps
