@@ -134,8 +134,9 @@ const updateUserSettings = async () => {
             email: settings.value.email
         });
 
-        if (state.user.email_subscription !== settings.value.email_subscription) {
-            if (settings.value.email_subscription) {
+        if(!isSubscribe) settings.value.email_subscription = false;
+        if (state.user.email_subscription !== isSubscribe) {
+            if (isSubscribe) {
                 await skapi.subscribeNewsletter({ group: 1 });
                 settings.value.email_subscription = true;
             } else {
