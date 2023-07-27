@@ -108,7 +108,7 @@ NavBarProxy(backgroundColor="#505050")
             span It may take a few minutes for a subdomain to be deleted.
         Teleport(to="#appMain")
             Transition
-                .cdnMessage(v-if="isCDNRefreshing && refreshCDNMessage") {{ refreshCDNMessage }} 
+                .cdnMessage(v-if="refreshCDNMessage") {{ refreshCDNMessage }} 
 sui-overlay(ref="deleteConfirmOverlay")
     form.popup(@submit.prevent="deleteService" action="" :loading="isDisabled || null")
         .title
@@ -246,11 +246,12 @@ const refreshCDN = () => {
             refreshCDNMessage.value = "Refreshing CDN. It could take up to 5 minutes."
         }).catch((e) => {
             console.log({e});
-            refreshCDNMessage.value = "CDN is still in queue or refreshing."
+            refreshCDNMessage.value = "We are unable to process your request as the previous request is still ongoing. Please try again later."
+            isCDNRefreshing.value = false;
         }).finally(() => {
             setTimeout(() => {
-                isCDNRefreshing.value = false;
                 refreshCDNMessage.value = "";
+                isCDNRefreshing.value = false;
             }, 5000)
         })
     }
