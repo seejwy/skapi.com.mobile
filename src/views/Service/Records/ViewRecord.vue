@@ -509,6 +509,8 @@ const deleteRecord = () => {
 			if(table.number_of_records <= 0) {
 				let idx =  recordTables.value.list.findIndex((rt) => rt.table === table.table)
 				recordTables.value.list.splice(idx, 1);
+				let tableListIdx = tableList.findIndex((name) => name === table.table)
+				tableList.splice(tableListIdx, 1);
 			}
 		}).catch((e) => {
 			console.log({ e });
@@ -627,7 +629,7 @@ const save = async () => {
 		let currentTable = props.record?.table?.name;
 		state.blockingPromise = skapi.postRecord(Object.keys(data.value).length ? formEl.value : null, config);
 		let r = await state.blockingPromise;
-
+		
 		if (isNewRecord) {
 			if (tableList.includes(r.table.name)) {
 				let idx = tableList.indexOf(r.table.name);
@@ -696,7 +698,6 @@ const save = async () => {
 		}
 
 		if (!isNewRecord && props.record?.table?.name !== currentTable) {
-			console.log("Not new")
 			if(recordTables.value) {
 				await nextTick();
 				recordTables.value.list.forEach((table, index) => {
