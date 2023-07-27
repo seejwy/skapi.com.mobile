@@ -696,6 +696,7 @@ const save = async () => {
 		}
 
 		if (!isNewRecord && props.record?.table?.name !== currentTable) {
+			console.log("Not new")
 			if(recordTables.value) {
 				await nextTick();
 				recordTables.value.list.forEach((table, index) => {
@@ -719,7 +720,7 @@ const save = async () => {
 						if (table.number_of_records <= 0) {
 							recordTables.value.list.splice(index, 1);
 						}
-					} else if (table.table === props.record.table.name) {
+					} else if (table.table === props.record.table.table) {
 						table.number_of_records++;
 						let idx = table.records.list.findIndex((record) => {
 							return record.uploaded > props.record.uploaded
