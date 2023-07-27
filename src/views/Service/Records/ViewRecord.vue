@@ -344,7 +344,6 @@ let isNewRecord = false;
 const fileSizeLimit = navigator?.userAgentData?.platform === 'Windows' || navigator?.oscpu?.includes('Windows') ? 3.9 : 4;
 
 const currentTotalFileSize = ref(0);
-console.log({recordTables: recordTables.value})
 const backHandler = () => {
     // if search page, go back to search page
     if(router.options.history.state.back) {
@@ -507,6 +506,10 @@ const deleteRecord = () => {
 		}).then(() => {
 			if (searchResult.value) searchResult.value.list.splice(tableIndex, 1);
 			if (recordTables.value) table.number_of_records--;
+			if(table.number_of_records <= 0) {
+				let idx =  recordTables.value.list.findIndex((rt) => rt.table === table.table)
+				recordTables.value.list.splice(idx, 1);
+			}
 		}).catch((e) => {
 			console.log({ e });
 		});
@@ -626,7 +629,6 @@ const save = async () => {
 		let r = await state.blockingPromise;
 
 		if (isNewRecord) {
-			console.log("New Record!!", tableList, r.table.name)
 			if (tableList.includes(r.table.name)) {
 				let idx = tableList.indexOf(r.table.name);
 				let tbl = recordTables.value.list[idx];
@@ -693,8 +695,6 @@ const save = async () => {
 			props.record[k] = r[k];
 		}
 
-		console.log(isNewRecord, props.record?.table?.name, currentTable)
-		console.log(recordTables.value)
 		if (!isNewRecord && props.record?.table?.name !== currentTable) {
 			if(recordTables.value) {
 				await nextTick();
