@@ -500,7 +500,7 @@ const deleteRecord = () => {
 			delete table.records.list[tableIndex].deleting;
 		});
 	} else {
-		if (searchResult.value && searchResult.value.list.length) searchResult.value.list[tableIndex].deleting = true;
+		if (searchResult.value && searchResult.value.list.length && table.records.list?.[tableIndex]) searchResult.value.list[tableIndex].deleting = true;
 
 		skapi.deleteRecords({
 			service: serviceId,
