@@ -694,39 +694,41 @@ const save = async () => {
 		}
 
 		if (!isNewRecord && props.record?.table?.name !== currentTable) {
-			await nextTick();
-			recordTables.value.list.forEach((table, index) => {
-				if (table.table === currentTable) {
-					let idx = table.records.list.findIndex((record) => {
-						return record.record_id === props.record_id
-					});
-
-					if (props.record.table.name !== currentTable) {
-						recordTables.value.list.push({
-							number_of_records: 1,
-							opened: true,
-							records: ref({ endOfList: true, startKey: 'end', startKey_list: ['end'], list: [r] }),
-							size: 0,
-							table: props.record.table.name
+			if(recordTables.value) {
+				await nextTick();
+				recordTables.value.list.forEach((table, index) => {
+					if (table.table === currentTable) {
+						let idx = table.records.list.findIndex((record) => {
+							return record.record_id === props.record_id
 						});
-					}
 
-					table.records.list.splice(idx, 1);
-					table.number_of_records--;
-					if (table.number_of_records <= 0) {
-						recordTables.value.list.splice(index, 1);
-					}
-				} else if (table.table === props.record.table.name) {
-					table.number_of_records++;
-					let idx = table.records.list.findIndex((record) => {
-						return record.uploaded > props.record.uploaded
-					});
+						if (props.record.table.name !== currentTable) {
+							recordTables.value.list.push({
+								number_of_records: 1,
+								opened: true,
+								records: ref({ endOfList: true, startKey: 'end', startKey_list: ['end'], list: [r] }),
+								size: 0,
+								table: props.record.table.name
+							});
+						}
 
-					table.records.list.splice(idx, 0, r);
-				} else {
-					refreshTables(serviceId);
-				}
-			});
+						table.records.list.splice(idx, 1);
+						table.number_of_records--;
+						if (table.number_of_records <= 0) {
+							recordTables.value.list.splice(index, 1);
+						}
+					} else if (table.table === props.record.table.name) {
+						table.number_of_records++;
+						let idx = table.records.list.findIndex((record) => {
+							return record.uploaded > props.record.uploaded
+						});
+
+						table.records.list.splice(idx, 0, r);
+					} else {
+						refreshTables(serviceId);
+					}
+				});
+			}
 		}
 
 		isSaving.value = false;
