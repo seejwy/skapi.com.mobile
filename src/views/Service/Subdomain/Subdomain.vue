@@ -36,12 +36,12 @@ const saveSubdomain = () => {
     isSaving.value = true;
     errorMessage.value = '';
 
-    skapi.registerSubdomain({
+    state.blockingPromise = skapi.registerSubdomain({
         subdomain: subdomain.value,
         exec: 'register',
         service: service.value.service
     }).then((res) => {
-        skapi.getServices(service.value.service).then((res) => {
+        state.blockingPromise = skapi.getServices(service.value.service).then((res) => {
             isSaving.value = false;
             state.services = res;
             service.value = res[service.value.region].find(serv => serv.service === service.value.service);
