@@ -1,5 +1,5 @@
 <template lang="pug">
-sui-textarea(@keydown="keydownHandler" @keyup="keypressHandler")
+sui-textarea(@keydown="keydownHandler" @change="keypressHandler")
 	slot
 </template>
 <script setup>
