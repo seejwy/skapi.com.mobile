@@ -17,7 +17,7 @@ const dateFormat = (timestamp) => {
     let hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
     let mins = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
     let secs = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-    let month = date.getMonth() < 10 ? '0' + date.getMonth() : date.getMonth();
+    let month = date.getMonth() < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1);
     let day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
 
     return `${date.getFullYear()}.${month}.${day} ${hours}:${mins}:${secs}`;
