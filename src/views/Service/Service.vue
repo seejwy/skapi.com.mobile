@@ -193,14 +193,14 @@ const informationGrid = reactive([
             return dateFormat(value).split(' ')[0];
         }
     },
-    {
-        name: 'Storage Use',
-        key: 'storage',
-        filter: (value) => {
-            let val = value || 0;
-            return getSize(val);
-        }
-    },
+    // {
+    //     name: 'Storage Use',
+    //     key: 'storage',
+    //     filter: (value) => {
+    //         let val = value || 0;
+    //         return getSize(val);
+    //     }
+    // },
     {
         name: '# of Users',
         key: 'users'
