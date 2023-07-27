@@ -20,9 +20,12 @@ NavBarProxy
         template(v-if="Object.keys(fileList).length")
             label.file(v-for="(file, path) in fileList")
                 sui-input(v-if="!isSaving && !isComplete" type="checkbox" :value="path" :disabled="isSaving" :checked="selectedFiles.includes(path)" @change="selectionHandler")
-                .progressBar(v-else @click="()=>abortUpload=path" :class="{'started': file.progress !== 100 && file.currentProgress > 0 && file.currentProgress < 100, 'complete': file.currentProgress === 100, 'failed': file.progress === false}" :style="{'--progress': 'conic-gradient(#5AD858 ' + (file.currentProgress ? file.currentProgress * 3.6 : 0) + 'deg, rgba(255,255,255,.1) 0deg)'}")
+                .progressBar(v-else @click="()=>abortUpload=path" :class="{'started': file.progress !== 100 && file.progress > 0, 'complete': file.isComplete, 'failed': file.progress === false}" :style="{'--num': file.progress}")
                     .circle
                     .circle
+                    svg(viewBox="0 0 20 20")
+                        circle(cx="10" cy="10" r="8")
+                        circle(cx="10" cy="10" r="8")
                 .path-wrapper
                     span.path {{ path }}
         template(v-else)
@@ -258,7 +261,6 @@ const uploadFiles = async () => {
     }
     isSaving.value = true;
 
-    let progress = 0;
     try {
         state.blockingPromise = await skapi.uploadFiles(formData, {
             service: service.value.service,
@@ -273,30 +275,15 @@ const uploadFiles = async () => {
                         numberOfFailedUploads.value++;
                         filesToUpload.value--;
                     }
-                    progress = e.progress;
+                    
                     fileList.value[e.currentFile.name].abort = e.abort;
                     fileList.value[e.currentFile.name].progress = e.progress;
-                    if (!fileList.value[e.currentFile.name].currentProgress) fileList.value[e.currentFile.name].currentProgress = 0;
-                    if (!fileList.value[e.currentFile.name].interval) {
-                        fileList.value[e.currentFile.name].interval = setInterval(() => {
-                            try {
-
-                                if (fileList.value[e.currentFile.name].currentProgress < progress) {
-                                    fileList.value[e.currentFile.name].currentProgress += 1;
-                                }
-
-                                if (fileList.value[e.currentFile.name].currentProgress === progress) {
-                                    filesToUpload.value--;
-                                    // service.value.files[e.currentFile.name] = `https://${service.value.subdomain}.skapi.com/${e.currentFile.name}`
-                                    saveToServiceFiles(e.currentFile);
-                                    clearInterval(fileList.value[e.currentFile.name].interval);
-                                    fileList.value[e.currentFile.name].interval = null;
-                                }
-                            } catch (e) {
-                                clearInterval(fileList.value[e.currentFile.name].interval);
-                                throw e;
-                            }
-                        }, 5);
+                    if(e.progress === 100) {
+                        filesToUpload.value--;
+                        saveToServiceFiles(e.currentFile);
+                        setTimeout(() => {                        
+                            fileList.value[e.currentFile.name].isComplete = true;
+                        }, 500)
                     }
                 }
             }
@@ -400,10 +387,29 @@ appStyle.background = '#333333';
             vertical-align: middle;
             width: 20px;
             height: 20px;
-            background: var(--progress);
             border-radius: 50%;
             position: relative;
             margin-right: 16px;
+
+            svg {
+                transform: rotate(270deg);
+            }
+
+            svg circle {
+                height: 100%;
+                width: 100%;
+                fill: transparent;
+                stroke-width: 4;
+                stroke: rgba(255,255,255,.1);
+                
+                &:nth-child(2) {
+                    stroke-width: 4;
+                    stroke: #5AD858;
+                    stroke-dasharray: 63;
+                    stroke-dashoffset: calc(63 - (63 * var(--num)) / 100);
+                    transition: all .5s ease-in;
+                }
+            }
 
             .circle {
                 border: 1px solid white;
@@ -469,6 +475,10 @@ appStyle.background = '#333333';
             }
 
             &.failed {
+                svg {
+                    display: none;
+                }
+
                 &::before {
                     top: 0;
                     left: 0;
