@@ -344,7 +344,7 @@ let isNewRecord = false;
 const fileSizeLimit = navigator?.userAgentData?.platform === 'Windows' || navigator?.oscpu?.includes('Windows') ? 3.9 : 4;
 
 const currentTotalFileSize = ref(0);
-
+console.log({recordTables: recordTables.value})
 const backHandler = () => {
     // if search page, go back to search page
     if(router.options.history.state.back) {
@@ -461,7 +461,6 @@ const editRecord = () => {
 
 const deleteRecord = () => {
 	let table, tableIndex;
-
 	if (recordTables.value) {
 		table = recordTables.value.list.find((val) => val.table === props.record.table.name);
 		if (table) {
@@ -500,7 +499,7 @@ const deleteRecord = () => {
 			delete table.records.list[tableIndex].deleting;
 		});
 	} else {
-		if (searchResult.value && searchResult.value.list.length && table.records.list?.[tableIndex]) searchResult.value.list[tableIndex].deleting = true;
+		if (searchResult.value && searchResult.value.list.length && searchResult.value.list[tableIndex]) searchResult.value.list[tableIndex].deleting = true;
 
 		skapi.deleteRecords({
 			service: serviceId,
@@ -627,6 +626,7 @@ const save = async () => {
 		let r = await state.blockingPromise;
 
 		if (isNewRecord) {
+			console.log("New Record!!", tableList, r.table.name)
 			if (tableList.includes(r.table.name)) {
 				let idx = tableList.indexOf(r.table.name);
 				let tbl = recordTables.value.list[idx];
@@ -693,6 +693,8 @@ const save = async () => {
 			props.record[k] = r[k];
 		}
 
+		console.log(isNewRecord, props.record?.table?.name, currentTable)
+		console.log(recordTables.value)
 		if (!isNewRecord && props.record?.table?.name !== currentTable) {
 			if(recordTables.value) {
 				await nextTick();
