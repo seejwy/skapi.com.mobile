@@ -6,7 +6,7 @@ NavBarProxy
         div
 .overlay-container(:loading="isSaving || null") 
     form.admin(@submit.prevent="saveSubdomain" action="")
-        sui-input(type="text" placeholder="Subdomain Name" :value="subdomain" @input="(e) => subdomain = e.target.value" required)
+        sui-input(type="text" placeholder="Subdomain Name" :value="subdomain" pattern="[a-zA-Z0-9]+" title="Only alphanumeric characters are allowed" @input="(e) => subdomain = e.target.value" required)
         .error {{ errorMessage }}
         SubmitButton(:loading="isSaving") Create
 </template>
